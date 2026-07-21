@@ -13,6 +13,9 @@ require_once dirname(__DIR__) . '/features/auth/AuthController.php';
 require_once dirname(__DIR__) . '/features/academic-terms/AcademicTermRepository.php';
 require_once dirname(__DIR__) . '/features/academic-terms/AcademicTermService.php';
 require_once dirname(__DIR__) . '/features/academic-terms/AcademicTermController.php';
+require_once dirname(__DIR__) . '/features/academic-events/AcademicEventRepository.php';
+require_once dirname(__DIR__) . '/features/academic-events/AcademicEventService.php';
+require_once dirname(__DIR__) . '/features/academic-events/AcademicEventController.php';
 require_once dirname(__DIR__) . '/features/courses/CourseRepository.php';
 require_once dirname(__DIR__) . '/features/courses/CourseService.php';
 require_once dirname(__DIR__) . '/features/courses/CourseController.php';
@@ -42,6 +45,7 @@ try {
     $authController = new AuthController($authService);
     $authMiddleware = new AuthMiddleware($authService);
     $academicTermController = new AcademicTermController(new AcademicTermService($connection, new AcademicTermRepository($connection), $activityRepository));
+    $academicEventController = new AcademicEventController(new AcademicEventService($connection, new AcademicEventRepository($connection), $activityRepository));
     $courseController = new CourseController(new CourseService(new CourseRepository($connection), $activityRepository));
     $classService = new ClassService($connection, new ClassRepository($connection), $activityRepository);
     $classController = new ClassController($classService);
@@ -78,6 +82,22 @@ try {
 
     if ($method === 'GET' && $path === '/api/dashboard') {
         $dashboardController->show($authMiddleware->authenticate(['admin', 'lecturer', 'student']));
+    }
+
+    if ($method === 'GET' && $path === '/api/academic-events') {
+        $academicEventController->index($authMiddleware->authenticate(['admin', 'lecturer', 'student']));
+    }
+
+    if ($method === 'POST' && $path === '/api/academic-events') {
+        $academicEventController->create($authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'PATCH' && preg_match('#^/api/academic-events/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $academicEventController->update($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'DELETE' && preg_match('#^/api/academic-events/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $academicEventController->delete($matches[1], $authMiddleware->authenticate(['admin']));
     }
 
     if ($method === 'GET' && $path === '/api/academic-terms') {

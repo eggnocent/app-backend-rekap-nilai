@@ -64,17 +64,20 @@ final class DashboardService
                 'grade_distribution' => [],
                 'classes' => [],
                 'activities' => [],
+                'upcoming_events' => [],
             ],
             'lecturer' => [
                 'metrics' => ['classes' => 0, 'students' => 0, 'grade_completion' => 0, 'average_final_score' => null],
                 'classes' => [],
                 'today_schedule' => [],
+                'upcoming_events' => [],
             ],
             'student' => [
                 'metrics' => ['active_classes' => 0, 'total_credits' => 0, 'published_grades' => 0],
                 'attendance' => ['meetings' => 0, 'present' => 0, 'unrecorded' => 0],
                 'classes' => [],
                 'published_grades' => [],
+                'upcoming_events' => [],
             ],
             default => [],
         };

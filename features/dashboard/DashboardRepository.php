@@ -28,6 +28,7 @@ final class DashboardRepository
             'grade_distribution' => $this->gradeDistribution($termId),
             'classes' => $this->classes($termId),
             'activities' => $this->activities(),
+            'upcoming_events' => $this->upcomingEvents($termId),
         ];
     }
 
@@ -39,6 +40,7 @@ final class DashboardRepository
             'metrics' => $this->lecturerMetrics($termId, $lecturerId),
             'classes' => $classes,
             'today_schedule' => $this->todaySchedule($termId, $lecturerId, $dayOfWeek),
+            'upcoming_events' => $this->upcomingEvents($termId, 'lecturer'),
         ];
     }
 
@@ -49,6 +51,7 @@ final class DashboardRepository
             'attendance' => $this->studentAttendance($termId, $studentId),
             'classes' => $this->studentClasses($termId, $studentId),
             'published_grades' => $this->publishedGrades($termId, $studentId),
+            'upcoming_events' => $this->upcomingEvents($termId, 'student'),
         ];
     }
 
@@ -145,6 +148,27 @@ final class DashboardRepository
             $row['activity_type'] = (int) $row['activity_type'];
             return $row;
         }, $statement->fetchAll());
+    }
+
+    private function upcomingEvents(string $termId, ?string $role = null): array
+    {
+        $query =
+            'SELECT id, title, description, starts_at, ends_at, location, audience
+             FROM academic_events
+             WHERE term_id = :term_id
+               AND ends_at >= NOW()';
+        $parameters = ['term_id' => $termId];
+
+        if ($role !== null) {
+            $query .= " AND audience IN ('all', :role)";
+            $parameters['role'] = $role;
+        }
+
+        $query .= ' ORDER BY starts_at ASC, created_at DESC LIMIT 4';
+        $statement = $this->connection->prepare($query);
+        $statement->execute($parameters);
+
+        return $statement->fetchAll();
     }
 
     private function lecturerMetrics(string $termId, string $lecturerId): array
