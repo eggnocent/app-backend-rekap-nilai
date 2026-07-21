@@ -28,3 +28,20 @@ API tersedia pada `http://localhost:8000/api`.
 | POST | /api/auth/logout |
 
 `POST /api/auth/login` menerima JSON `email`, `password`, dan `remember` opsional. Endpoint `me` dan `logout` memerlukan header `Authorization: Bearer <access_token>`.
+
+## Endpoint Master Akademik
+
+| Method | Endpoint | Role |
+| --- | --- | --- |
+| GET | /api/academic-terms/active | Semua user terautentikasi |
+| GET, POST | /api/academic-terms | Admin |
+| PATCH | /api/academic-terms/{id} | Admin |
+| GET, POST | /api/courses | Semua user, Admin untuk POST |
+| PATCH | /api/courses/{id} | Admin |
+| GET, POST | /api/classes | Admin dan Lecturer untuk GET, Admin untuk POST |
+| GET, PATCH | /api/classes/{id} | Admin dan Lecturer untuk GET, Admin untuk PATCH |
+| POST | /api/classes/{id}/close | Admin |
+| GET | /api/schedules | Admin dan Lecturer |
+| PUT | /api/classes/{id}/schedules | Admin |
+
+Kelas menerima `term_id`, `course_id`, `lecturer_id`, `code`, `capacity`, serta `schedules`. Setiap slot jadwal berisi `day_of_week` 1–6, `start_time`, `end_time`, dan `room`.

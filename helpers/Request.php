@@ -33,6 +33,20 @@ final class Request
         return $payload;
     }
 
+    public static function query(string $key): ?string
+    {
+        $query = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_QUERY);
+
+        if (!is_string($query)) {
+            return null;
+        }
+
+        parse_str($query, $parameters);
+        $value = $parameters[$key] ?? null;
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
     public static function bearerToken(): ?string
     {
         $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
