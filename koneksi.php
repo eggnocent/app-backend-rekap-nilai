@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * Membuat koneksi PostgreSQL saat pertama kali diperlukan.
- * Konfigurasi dibaca dari environment agar kredensial tidak disimpan di Git.
- */
 function database(): PDO
 {
     static $connection = null;

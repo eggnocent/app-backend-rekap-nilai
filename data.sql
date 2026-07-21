@@ -1,9 +1,3 @@
--- NilaiKu API database schema
--- Target: PostgreSQL 14+.
--- UUID dibuat oleh PostgreSQL melalui extension pgcrypto.
--- Tidak ada validasi bisnis, unique constraint, check constraint, enum,
--- generated column, atau index tambahan pada tahap ini.
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE users (
@@ -257,3 +251,40 @@ CREATE TABLE activity_log (
     FOREIGN KEY (created_by) REFERENCES users (id),
     FOREIGN KEY (updated_by) REFERENCES users (id)
 );
+
+CREATE TABLE auth_sessions (
+    id          UUID        DEFAULT gen_random_uuid()           NOT NULL,
+    user_id     UUID                                  NOT NULL,
+    token_hash  VARCHAR(64)                           NOT NULL,
+    expires_at  TIMESTAMPTZ                           NOT NULL,
+    revoked_at  TIMESTAMPTZ,
+    last_used_at TIMESTAMPTZ,
+    ip_address  VARCHAR(64),
+    user_agent  TEXT,
+    created_at  TIMESTAMPTZ DEFAULT NOW()             NOT NULL,
+    created_by  UUID                                  NOT NULL,
+    updated_at  TIMESTAMPTZ,
+    updated_by  UUID,
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (created_by) REFERENCES users (id),
+    FOREIGN KEY (updated_by) REFERENCES users (id)
+);
+
+BEGIN;
+
+INSERT INTO users (id, name, email, password_hash, role, identifier, phone, is_active, created_by)
+VALUES
+    ('00000000-0000-4000-8000-000000000001', 'Administrator NilaiKu', 'admin@nilaiku.test', crypt('Password123!', gen_salt('bf', 12)), 'admin', 'ADMIN-001', '081200000001', TRUE, '00000000-0000-4000-8000-000000000001'),
+    ('00000000-0000-4000-8000-000000000002', 'Dr. Anggit Prabowo', 'dosen@nilaiku.test', crypt('Password123!', gen_salt('bf', 12)), 'lecturer', '0512048601', '081200000002', TRUE, '00000000-0000-4000-8000-000000000002'),
+    ('00000000-0000-4000-8000-000000000003', 'Budi Santoso', 'budi.santoso@students.kampus.ac.id', crypt('Password123!', gen_salt('bf', 12)), 'student', '23.11.5231', '081200000003', TRUE, '00000000-0000-4000-8000-000000000003');
+
+INSERT INTO lecturer_profiles (id, user_id, nidn, faculty, major, created_by)
+VALUES
+    ('00000000-0000-4000-8000-000000000012', '00000000-0000-4000-8000-000000000002', '0512048601', 'Fakultas Ilmu Komputer', 'Informatika', '00000000-0000-4000-8000-000000000001');
+
+INSERT INTO student_profiles (id, user_id, nim, faculty, major, entry_year, current_semester, total_credits_target, status, created_by)
+VALUES
+    ('00000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000003', '23.11.5231', 'Fakultas Ilmu Komputer', 'Informatika', 2023, 6, 144, 'active', '00000000-0000-4000-8000-000000000001');
+
+COMMIT;

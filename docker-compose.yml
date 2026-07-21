@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: .
+      network: host
+    working_dir: /var/www/html
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+    environment:
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_NAME: nilaiku
+      DB_USER: nilaiku
+      DB_PASSWORD: nilaiku
+    depends_on:
+      database:
+        condition: service_healthy
+  database:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: nilaiku
+      POSTGRES_USER: nilaiku
+      POSTGRES_PASSWORD: nilaiku
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data.sql:/docker-entrypoint-initdb.d/data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nilaiku -d nilaiku"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
