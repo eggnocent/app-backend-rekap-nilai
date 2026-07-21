@@ -45,3 +45,14 @@ API tersedia pada `http://localhost:8000/api`.
 | PUT | /api/classes/{id}/schedules | Admin |
 
 Kelas menerima `term_id`, `course_id`, `lecturer_id`, `code`, `capacity`, serta `schedules`. Setiap slot jadwal berisi `day_of_week` 1–6, `start_time`, `end_time`, dan `room`.
+
+## Endpoint Enrollment
+
+| Method | Endpoint | Role |
+| --- | --- | --- |
+| GET, POST | /api/enrollments | Admin |
+| POST | /api/enrollments/{id}/cancel | Admin |
+| GET | /api/enrollments/me | Student |
+| GET | /api/schedules/me | Student |
+
+`POST /api/enrollments` menerima JSON `student_id` dan `class_id`. Enrollment baru hanya dapat dibuat untuk kelas aktif pada semester aktif.

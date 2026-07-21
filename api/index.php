@@ -20,6 +20,9 @@ require_once dirname(__DIR__) . '/features/classes/ClassRepository.php';
 require_once dirname(__DIR__) . '/features/classes/ClassService.php';
 require_once dirname(__DIR__) . '/features/classes/ClassController.php';
 require_once dirname(__DIR__) . '/features/classes/ScheduleController.php';
+require_once dirname(__DIR__) . '/features/enrollments/EnrollmentRepository.php';
+require_once dirname(__DIR__) . '/features/enrollments/EnrollmentService.php';
+require_once dirname(__DIR__) . '/features/enrollments/EnrollmentController.php';
 require_once dirname(__DIR__) . '/middleware/AuthMiddleware.php';
 
 try {
@@ -34,6 +37,7 @@ try {
     $classService = new ClassService($connection, new ClassRepository($connection), $activityRepository);
     $classController = new ClassController($classService);
     $scheduleController = new ScheduleController($classService);
+    $enrollmentController = new EnrollmentController(new EnrollmentService($connection, new EnrollmentRepository($connection), $activityRepository));
     $method = Request::method();
     $path = Request::path();
 
@@ -89,6 +93,10 @@ try {
         $scheduleController->index($authMiddleware->authenticate(['admin', 'lecturer']));
     }
 
+    if ($method === 'GET' && $path === '/api/schedules/me') {
+        $enrollmentController->mySchedule($authMiddleware->authenticate(['student']));
+    }
+
     if ($method === 'PUT' && preg_match('#^/api/classes/([0-9a-fA-F-]{36})/schedules$#', $path, $matches) === 1) {
         $scheduleController->replace($matches[1], $authMiddleware->authenticate(['admin']));
     }
@@ -111,6 +119,23 @@ try {
 
     if ($method === 'PATCH' && preg_match('#^/api/classes/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
         $classController->update($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'GET' && $path === '/api/enrollments') {
+        $authMiddleware->authenticate(['admin']);
+        $enrollmentController->index();
+    }
+
+    if ($method === 'POST' && $path === '/api/enrollments') {
+        $enrollmentController->create($authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'GET' && $path === '/api/enrollments/me') {
+        $enrollmentController->mine($authMiddleware->authenticate(['student']));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/enrollments/([0-9a-fA-F-]{36})/cancel$#', $path, $matches) === 1) {
+        $enrollmentController->cancel($matches[1], $authMiddleware->authenticate(['admin']));
     }
 
     Response::error('Endpoint tidak ditemukan.', 404);
