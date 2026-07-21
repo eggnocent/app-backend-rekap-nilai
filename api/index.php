@@ -35,6 +35,9 @@ require_once dirname(__DIR__) . '/features/attendance/AttendanceController.php';
 require_once dirname(__DIR__) . '/features/dashboard/DashboardRepository.php';
 require_once dirname(__DIR__) . '/features/dashboard/DashboardService.php';
 require_once dirname(__DIR__) . '/features/dashboard/DashboardController.php';
+require_once dirname(__DIR__) . '/features/users/UserRepository.php';
+require_once dirname(__DIR__) . '/features/users/UserService.php';
+require_once dirname(__DIR__) . '/features/users/UserController.php';
 require_once dirname(__DIR__) . '/middleware/AuthMiddleware.php';
 
 try {
@@ -54,6 +57,7 @@ try {
     $gradeController = new GradeController(new GradeService($connection, new GradeRepository($connection), new EnrollmentRepository($connection), $activityRepository));
     $attendanceController = new AttendanceController(new AttendanceService($connection, new AttendanceRepository($connection), new EnrollmentRepository($connection), $activityRepository));
     $dashboardController = new DashboardController(new DashboardService(new DashboardRepository($connection)));
+    $userController = new UserController(new UserService($connection, new UserRepository($connection), $activityRepository));
     $method = Request::method();
     $path = Request::path();
 
@@ -82,6 +86,40 @@ try {
 
     if ($method === 'GET' && $path === '/api/dashboard') {
         $dashboardController->show($authMiddleware->authenticate(['admin', 'lecturer', 'student']));
+    }
+
+    if ($method === 'GET' && $path === '/api/profile') {
+        $userController->profile($authMiddleware->authenticate(['student', 'lecturer']));
+    }
+
+    if ($method === 'PATCH' && $path === '/api/profile') {
+        $userController->updateProfile($authMiddleware->authenticate(['student', 'lecturer']));
+    }
+
+    if ($method === 'GET' && $path === '/api/students') {
+        $authMiddleware->authenticate(['admin']);
+        $userController->students();
+    }
+
+    if ($method === 'POST' && $path === '/api/students') {
+        $userController->createStudent($authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'PATCH' && preg_match('#^/api/students/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $userController->updateStudent($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'GET' && $path === '/api/lecturers') {
+        $authMiddleware->authenticate(['admin']);
+        $userController->lecturers();
+    }
+
+    if ($method === 'POST' && $path === '/api/lecturers') {
+        $userController->createLecturer($authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'PATCH' && preg_match('#^/api/lecturers/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $userController->updateLecturer($matches[1], $authMiddleware->authenticate(['admin']));
     }
 
     if ($method === 'GET' && $path === '/api/academic-events') {
