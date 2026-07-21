@@ -27,4 +27,16 @@ final class AuthController
             'message' => 'Logout berhasil.',
         ]);
     }
+
+    public function forgotPassword(): never
+    {
+        $this->authService->requestPasswordReset(Request::json());
+        Response::send(['message' => 'Jika email terdaftar, tautan reset password telah dikirim.']);
+    }
+
+    public function resetPassword(): never
+    {
+        $this->authService->resetPassword(Request::json());
+        Response::send(['message' => 'Password berhasil diatur ulang.']);
+    }
 }

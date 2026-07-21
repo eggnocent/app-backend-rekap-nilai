@@ -29,6 +29,10 @@ API tersedia pada `http://localhost:8000/api`.
 
 `POST /api/auth/login` menerima JSON `email`, `password`, dan `remember` opsional. Endpoint `me` dan `logout` memerlukan header `Authorization: Bearer <access_token>`.
 
+`POST /api/auth/forgot-password` menerima `email` dan mengirim tautan reset melalui Resend. `POST /api/auth/reset-password` menerima `token` dan `password` baru. Salin `.env.example` menjadi `.env`, lalu isi `RESEND_API_KEY`, `RESEND_FROM`, dan `APP_FRONTEND_URL`. Alamat pengirim harus memakai domain yang sudah diverifikasi di Resend.
+
+Untuk database Docker yang sudah dibuat sebelum fitur ini, jalankan `docker compose exec -T database psql -U nilaiku -d nilaiku < database/migrations/001_password_reset_tokens.sql`.
+
 ## Endpoint Master Akademik
 
 | Method | Endpoint | Role |

@@ -14,6 +14,10 @@ services:
       DB_NAME: nilaiku
       DB_USER: nilaiku
       DB_PASSWORD: nilaiku
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:5173}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
     depends_on:
       database:
         condition: service_healthy

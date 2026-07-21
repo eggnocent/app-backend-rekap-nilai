@@ -38,6 +38,21 @@ final class AuthRepository
         return is_array($user) ? $user : null;
     }
 
+    public function findActiveUserForReset(string $email): ?array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT id, name, email, role
+             FROM users
+             WHERE LOWER(email) = LOWER(:email)
+               AND is_active IS TRUE
+             LIMIT 1'
+        );
+        $statement->execute(['email' => $email]);
+        $user = $statement->fetch();
+
+        return is_array($user) ? $user : null;
+    }
+
     public function findAuthenticatedUser(string $tokenHash): ?array
     {
         $statement = $this->connection->prepare(
@@ -124,5 +139,77 @@ final class AuthRepository
             'id' => $userId,
             'updated_by' => $userId,
         ]);
+    }
+
+    public function invalidateUnusedPasswordResetTokens(string $userId): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE password_reset_tokens
+             SET used_at = NOW(), updated_at = NOW(), updated_by = :updated_by
+             WHERE user_id = :user_id
+               AND used_at IS NULL'
+        );
+        $statement->execute(['user_id' => $userId, 'updated_by' => $userId]);
+    }
+
+    public function createPasswordResetToken(string $userId, string $tokenHash, string $expiresAt): void
+    {
+        $statement = $this->connection->prepare(
+            'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at, created_by)
+             VALUES (:user_id, :token_hash, :expires_at, :created_by)'
+        );
+        $statement->execute([
+            'user_id' => $userId,
+            'token_hash' => $tokenHash,
+            'expires_at' => $expiresAt,
+            'created_by' => $userId,
+        ]);
+    }
+
+    public function findValidPasswordResetToken(string $tokenHash): ?array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT id, user_id
+             FROM password_reset_tokens
+             WHERE token_hash = :token_hash
+               AND used_at IS NULL
+               AND expires_at > NOW()
+             LIMIT 1'
+        );
+        $statement->execute(['token_hash' => $tokenHash]);
+        $token = $statement->fetch();
+
+        return is_array($token) ? $token : null;
+    }
+
+    public function resetPassword(string $userId, string $passwordHash): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE users
+             SET password_hash = :password_hash, updated_at = NOW(), updated_by = :updated_by
+             WHERE id = :id'
+        );
+        $statement->execute(['id' => $userId, 'password_hash' => $passwordHash, 'updated_by' => $userId]);
+    }
+
+    public function consumePasswordResetToken(string $tokenId, string $userId): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE password_reset_tokens
+             SET used_at = NOW(), updated_at = NOW(), updated_by = :updated_by
+             WHERE id = :id'
+        );
+        $statement->execute(['id' => $tokenId, 'updated_by' => $userId]);
+    }
+
+    public function revokeUserSessions(string $userId): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE auth_sessions
+             SET revoked_at = NOW(), updated_at = NOW(), updated_by = :updated_by
+             WHERE user_id = :user_id
+               AND revoked_at IS NULL'
+        );
+        $statement->execute(['user_id' => $userId, 'updated_by' => $userId]);
     }
 }
