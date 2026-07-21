@@ -29,6 +29,9 @@ require_once dirname(__DIR__) . '/features/grades/GradeController.php';
 require_once dirname(__DIR__) . '/features/attendance/AttendanceRepository.php';
 require_once dirname(__DIR__) . '/features/attendance/AttendanceService.php';
 require_once dirname(__DIR__) . '/features/attendance/AttendanceController.php';
+require_once dirname(__DIR__) . '/features/dashboard/DashboardRepository.php';
+require_once dirname(__DIR__) . '/features/dashboard/DashboardService.php';
+require_once dirname(__DIR__) . '/features/dashboard/DashboardController.php';
 require_once dirname(__DIR__) . '/middleware/AuthMiddleware.php';
 
 try {
@@ -46,6 +49,7 @@ try {
     $enrollmentController = new EnrollmentController(new EnrollmentService($connection, new EnrollmentRepository($connection), $activityRepository));
     $gradeController = new GradeController(new GradeService($connection, new GradeRepository($connection), new EnrollmentRepository($connection), $activityRepository));
     $attendanceController = new AttendanceController(new AttendanceService($connection, new AttendanceRepository($connection), new EnrollmentRepository($connection), $activityRepository));
+    $dashboardController = new DashboardController(new DashboardService(new DashboardRepository($connection)));
     $method = Request::method();
     $path = Request::path();
 
@@ -70,6 +74,10 @@ try {
     if ($method === 'GET' && $path === '/api/academic-terms/active') {
         $authMiddleware->authenticate();
         $academicTermController->active();
+    }
+
+    if ($method === 'GET' && $path === '/api/dashboard') {
+        $dashboardController->show($authMiddleware->authenticate(['admin', 'lecturer', 'student']));
     }
 
     if ($method === 'GET' && $path === '/api/academic-terms') {
