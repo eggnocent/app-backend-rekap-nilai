@@ -56,3 +56,18 @@ Kelas menerima `term_id`, `course_id`, `lecturer_id`, `code`, `capacity`, serta 
 | GET | /api/schedules/me | Student |
 
 `POST /api/enrollments` menerima JSON `student_id` dan `class_id`. Enrollment baru hanya dapat dibuat untuk kelas aktif pada semester aktif.
+
+## Endpoint Nilai
+
+| Method | Endpoint | Role |
+| --- | --- | --- |
+| GET | /api/classes/{id}/grades | Lecturer |
+| PUT | /api/grades/enrollments/{id} | Lecturer |
+| POST | /api/grades/{id}/submit | Lecturer |
+| GET | /api/grades | Admin |
+| POST | /api/grades/{id}/verify | Admin |
+| POST | /api/grades/{id}/return | Admin |
+| POST | /api/grades/{id}/publish | Admin |
+| GET | /api/grades/me | Student |
+
+Simpan nilai draf menerima `assignment_score`, `midterm_score`, dan `final_exam_score`. Nilai akhir dihitung dengan bobot 30%, 30%, dan 40%.

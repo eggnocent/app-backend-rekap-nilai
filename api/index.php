@@ -23,6 +23,9 @@ require_once dirname(__DIR__) . '/features/classes/ScheduleController.php';
 require_once dirname(__DIR__) . '/features/enrollments/EnrollmentRepository.php';
 require_once dirname(__DIR__) . '/features/enrollments/EnrollmentService.php';
 require_once dirname(__DIR__) . '/features/enrollments/EnrollmentController.php';
+require_once dirname(__DIR__) . '/features/grades/GradeRepository.php';
+require_once dirname(__DIR__) . '/features/grades/GradeService.php';
+require_once dirname(__DIR__) . '/features/grades/GradeController.php';
 require_once dirname(__DIR__) . '/middleware/AuthMiddleware.php';
 
 try {
@@ -38,6 +41,7 @@ try {
     $classController = new ClassController($classService);
     $scheduleController = new ScheduleController($classService);
     $enrollmentController = new EnrollmentController(new EnrollmentService($connection, new EnrollmentRepository($connection), $activityRepository));
+    $gradeController = new GradeController(new GradeService($connection, new GradeRepository($connection), new EnrollmentRepository($connection), $activityRepository));
     $method = Request::method();
     $path = Request::path();
 
@@ -136,6 +140,39 @@ try {
 
     if ($method === 'POST' && preg_match('#^/api/enrollments/([0-9a-fA-F-]{36})/cancel$#', $path, $matches) === 1) {
         $enrollmentController->cancel($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'GET' && preg_match('#^/api/classes/([0-9a-fA-F-]{36})/grades$#', $path, $matches) === 1) {
+        $gradeController->roster($matches[1], $authMiddleware->authenticate(['lecturer']));
+    }
+
+    if ($method === 'PUT' && preg_match('#^/api/grades/enrollments/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $gradeController->saveDraft($matches[1], $authMiddleware->authenticate(['lecturer']));
+    }
+
+    if ($method === 'GET' && $path === '/api/grades') {
+        $authMiddleware->authenticate(['admin']);
+        $gradeController->index();
+    }
+
+    if ($method === 'GET' && $path === '/api/grades/me') {
+        $gradeController->mine($authMiddleware->authenticate(['student']));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/grades/([0-9a-fA-F-]{36})/submit$#', $path, $matches) === 1) {
+        $gradeController->submit($matches[1], $authMiddleware->authenticate(['lecturer']));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/grades/([0-9a-fA-F-]{36})/verify$#', $path, $matches) === 1) {
+        $gradeController->verify($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/grades/([0-9a-fA-F-]{36})/return$#', $path, $matches) === 1) {
+        $gradeController->returnGrade($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/grades/([0-9a-fA-F-]{36})/publish$#', $path, $matches) === 1) {
+        $gradeController->publish($matches[1], $authMiddleware->authenticate(['admin']));
     }
 
     Response::error('Endpoint tidak ditemukan.', 404);
