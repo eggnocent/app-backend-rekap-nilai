@@ -71,3 +71,15 @@ Kelas menerima `term_id`, `course_id`, `lecturer_id`, `code`, `capacity`, serta 
 | GET | /api/grades/me | Student |
 
 Simpan nilai draf menerima `assignment_score`, `midterm_score`, dan `final_exam_score`. Nilai akhir dihitung dengan bobot 30%, 30%, dan 40%.
+
+## Endpoint Presensi
+
+| Method | Endpoint | Role |
+| --- | --- | --- |
+| GET | /api/classes/{id}/attendance | Admin, Lecturer |
+| POST | /api/classes/{id}/attendance-meetings | Lecturer |
+| PUT | /api/attendance-meetings/{id}/records/{enrollmentId} | Lecturer |
+| GET | /api/attendance | Admin |
+| GET | /api/attendance/me | Student |
+
+Meeting menerima `meeting_date` dan `topic`. Record presensi menerima `status`: `Hadir`, `Terlambat`, `Izin`, atau `Alpha`.

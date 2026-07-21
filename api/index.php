@@ -26,6 +26,9 @@ require_once dirname(__DIR__) . '/features/enrollments/EnrollmentController.php'
 require_once dirname(__DIR__) . '/features/grades/GradeRepository.php';
 require_once dirname(__DIR__) . '/features/grades/GradeService.php';
 require_once dirname(__DIR__) . '/features/grades/GradeController.php';
+require_once dirname(__DIR__) . '/features/attendance/AttendanceRepository.php';
+require_once dirname(__DIR__) . '/features/attendance/AttendanceService.php';
+require_once dirname(__DIR__) . '/features/attendance/AttendanceController.php';
 require_once dirname(__DIR__) . '/middleware/AuthMiddleware.php';
 
 try {
@@ -42,6 +45,7 @@ try {
     $scheduleController = new ScheduleController($classService);
     $enrollmentController = new EnrollmentController(new EnrollmentService($connection, new EnrollmentRepository($connection), $activityRepository));
     $gradeController = new GradeController(new GradeService($connection, new GradeRepository($connection), new EnrollmentRepository($connection), $activityRepository));
+    $attendanceController = new AttendanceController(new AttendanceService($connection, new AttendanceRepository($connection), new EnrollmentRepository($connection), $activityRepository));
     $method = Request::method();
     $path = Request::path();
 
@@ -173,6 +177,27 @@ try {
 
     if ($method === 'POST' && preg_match('#^/api/grades/([0-9a-fA-F-]{36})/publish$#', $path, $matches) === 1) {
         $gradeController->publish($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'GET' && $path === '/api/attendance') {
+        $authMiddleware->authenticate(['admin']);
+        $attendanceController->index();
+    }
+
+    if ($method === 'GET' && $path === '/api/attendance/me') {
+        $attendanceController->mine($authMiddleware->authenticate(['student']));
+    }
+
+    if ($method === 'GET' && preg_match('#^/api/classes/([0-9a-fA-F-]{36})/attendance$#', $path, $matches) === 1) {
+        $attendanceController->classAttendance($matches[1], $authMiddleware->authenticate(['admin', 'lecturer']));
+    }
+
+    if ($method === 'POST' && preg_match('#^/api/classes/([0-9a-fA-F-]{36})/attendance-meetings$#', $path, $matches) === 1) {
+        $attendanceController->createMeeting($matches[1], $authMiddleware->authenticate(['lecturer']));
+    }
+
+    if ($method === 'PUT' && preg_match('#^/api/attendance-meetings/([0-9a-fA-F-]{36})/records/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $attendanceController->setRecord($matches[1], $matches[2], $authMiddleware->authenticate(['lecturer']));
     }
 
     Response::error('Endpoint tidak ditemukan.', 404);
