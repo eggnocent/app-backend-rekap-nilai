@@ -50,8 +50,10 @@ services:
       - "443:443"
     environment:
       DEPLOYMENT_DOMAIN: ${DEPLOYMENT_DOMAIN}
+      FRONTEND_DOMAIN: ${FRONTEND_DOMAIN}
     volumes:
       - ${NGINX_TEMPLATE_DIR:-./nginx/templates/production}:/etc/nginx/templates:ro
+      - ${FRONTEND_DIST_PATH:-/opt/nilaiku/app-frontend/dist}:/usr/share/nginx/html:ro
       - certbot_webroot:/var/www/certbot:ro
       - certbot_conf:/etc/letsencrypt:ro
     depends_on:
@@ -64,6 +66,7 @@ services:
     profiles: ["certbot"]
     environment:
       DEPLOYMENT_DOMAIN: ${DEPLOYMENT_DOMAIN}
+      FRONTEND_DOMAIN: ${FRONTEND_DOMAIN}
       CERTBOT_EMAIL: ${CERTBOT_EMAIL}
     volumes:
       - certbot_webroot:/var/www/certbot

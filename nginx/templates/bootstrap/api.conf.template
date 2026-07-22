@@ -1,7 +1,7 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DEPLOYMENT_DOMAIN};
+    server_name ${DEPLOYMENT_DOMAIN} ${FRONTEND_DOMAIN};
     client_max_body_size 2m;
 
     location ^~ /.well-known/acme-challenge/ {

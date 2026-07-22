@@ -1,7 +1,7 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DEPLOYMENT_DOMAIN};
+    server_name ${DEPLOYMENT_DOMAIN} ${FRONTEND_DOMAIN};
     client_max_body_size 2m;
 
     location ^~ /.well-known/acme-challenge/ {
@@ -33,5 +33,29 @@ server {
 
     location / {
         return 404;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name ${FRONTEND_DOMAIN};
+    client_max_body_size 2m;
+
+    ssl_certificate /etc/letsencrypt/live/${DEPLOYMENT_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DEPLOYMENT_DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location /assets/ {
+        try_files $uri =404;
+        expires 1y;
+        add_header Cache-Control "public";
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 }

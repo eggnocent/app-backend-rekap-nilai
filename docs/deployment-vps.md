@@ -4,8 +4,7 @@ Dokumen ini menjalankan backend NilaiKu pada satu VPS Ubuntu LTS. Stack produksi
 
 ## Prasyarat
 
-- Domain API sudah mengarah ke alamat IPv4 VPS, misalnya `api.example.com`.
-- Frontend produksi sudah tersedia pada domain HTTPS.
+- Domain API dan frontend sudah mengarah ke alamat IPv4 VPS, misalnya `api.example.com` dan `nilaiku.example.com`.
 - VPS memiliki Docker Engine, Docker Compose plugin, Git, dan akses SSH berbasis key.
 - Firewall hanya mengizinkan port `22`, `80`, dan `443`.
 
@@ -56,6 +55,23 @@ curl --fail https://"$(grep '^DEPLOYMENT_DOMAIN=' /opt/nilaiku/.env | cut -d= -f
 
 `GET /api/health` harus menghasilkan respons JSON dengan `status` bernilai `ok`.
 
+## Frontend pada VPS
+
+Frontend Vite dibangun di `/opt/nilaiku/app-frontend` dan hasil `dist` dilayani Nginx pada `FRONTEND_DOMAIN`. Buat sertifikat gabungan untuk domain API dan frontend sebelum memakai template produksi.
+
+```bash
+cd /opt/nilaiku/app-backend
+docker compose --env-file /opt/nilaiku/.env -f docker-compose.production.yml --profile certbot run --rm certbot certonly --webroot -w /var/www/certbot --cert-name "$(grep '^DEPLOYMENT_DOMAIN=' /opt/nilaiku/.env | cut -d= -f2-)" --expand -d "$(grep '^DEPLOYMENT_DOMAIN=' /opt/nilaiku/.env | cut -d= -f2-)" -d "$(grep '^FRONTEND_DOMAIN=' /opt/nilaiku/.env | cut -d= -f2-)" --email "$(grep '^CERTBOT_EMAIL=' /opt/nilaiku/.env | cut -d= -f2-)" --agree-tos --no-eff-email
+git clone https://github.com/eggnocent/app-frontend-rekap-nilai.git /opt/nilaiku/app-frontend
+cd /opt/nilaiku/app-frontend
+VITE_API_BASE_URL="https://$(grep '^DEPLOYMENT_DOMAIN=' /opt/nilaiku/.env | cut -d= -f2-)" npm ci
+VITE_API_BASE_URL="https://$(grep '^DEPLOYMENT_DOMAIN=' /opt/nilaiku/.env | cut -d= -f2-)" npm run build
+cd /opt/nilaiku/app-backend
+docker compose --env-file /opt/nilaiku/.env -f docker-compose.production.yml up -d --force-recreate nginx app
+```
+
+Set `APP_FRONTEND_URL`, `CORS_ALLOWED_ORIGIN`, dan `FRONTEND_DOMAIN` ke domain frontend final sebelum menjalankan kembali `app` dan Nginx.
+
 ## Operasional
 
 Gunakan deploy script untuk pembaruan rutin. Skrip mengambil perubahan fast-forward, membuat backup sebelum perubahan, membangun image, menjalankan stack, lalu menerapkan migrasi baru.
@@ -76,8 +92,9 @@ Backup PostgreSQL disimpan di `/var/backups/nilaiku` dan dihapus setelah tujuh h
 
 ## Pemeriksaan pascadeploy
 
-- HTTPS aktif dan sertifikat valid untuk domain API.
+- HTTPS aktif dan sertifikat valid untuk domain API dan frontend.
 - `https://<domain-api>/api/health` merespons sukses.
+- `https://<domain-frontend>` memuat aplikasi Vite.
 - Login frontend, reset password Resend, dan upload avatar Supabase berjalan.
 - Port PostgreSQL dan PHP-FPM tidak terbuka dari internet.
 - Data tetap tersedia setelah `docker compose restart`.
