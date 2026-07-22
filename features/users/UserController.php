@@ -47,4 +47,14 @@ final class UserController
     {
         Response::send(['data' => $this->service->updateProfile(Request::json(), $user)]);
     }
+
+    public function uploadAvatar(array $user): never
+    {
+        Response::send(['data' => $this->service->uploadAvatar(Request::file('avatar'), $user)]);
+    }
+
+    public function deleteAvatar(array $user): never
+    {
+        Response::send(['data' => $this->service->deleteAvatar($user)]);
+    }
 }

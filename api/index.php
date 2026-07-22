@@ -7,6 +7,7 @@ require_once dirname(__DIR__) . '/helpers/Response.php';
 require_once dirname(__DIR__) . '/helpers/Request.php';
 require_once dirname(__DIR__) . '/helpers/Token.php';
 require_once dirname(__DIR__) . '/helpers/ResendMailer.php';
+require_once dirname(__DIR__) . '/helpers/SupabaseStorage.php';
 require_once dirname(__DIR__) . '/features/activities/ActivityRepository.php';
 require_once dirname(__DIR__) . '/features/auth/AuthRepository.php';
 require_once dirname(__DIR__) . '/features/auth/AuthService.php';
@@ -77,6 +78,10 @@ try {
         ]);
     }
 
+    if ($method === 'GET' && $path === '/api/health') {
+        Response::send(['status' => 'ok']);
+    }
+
     if ($method === 'POST' && $path === '/api/auth/login') {
         $authController->login();
     }
@@ -112,6 +117,14 @@ try {
 
     if ($method === 'PATCH' && $path === '/api/profile') {
         $userController->updateProfile($authMiddleware->authenticate(['student', 'lecturer']));
+    }
+
+    if ($method === 'POST' && $path === '/api/profile/avatar') {
+        $userController->uploadAvatar($authMiddleware->authenticate(['student', 'lecturer']));
+    }
+
+    if ($method === 'DELETE' && $path === '/api/profile/avatar') {
+        $userController->deleteAvatar($authMiddleware->authenticate(['student', 'lecturer']));
     }
 
     if ($method === 'GET' && $path === '/api/students') {

@@ -122,9 +122,11 @@ final class UserService
 
     public function profile(array $user): array
     {
-        return $user['role'] === 'student'
+        $profile = $user['role'] === 'student'
             ? $this->requiredStudentProfile($user['student_profile_id'] ?? null)
             : $this->requiredLecturerProfile($user['lecturer_profile_id'] ?? null);
+
+        return $this->withAvatarUrl($profile);
     }
 
     public function updateProfile(array $payload, array $user): array
@@ -138,6 +140,67 @@ final class UserService
         return $this->profile($user);
     }
 
+    public function uploadAvatar(array $file, array $user): array
+    {
+        $this->profile($user);
+        $storage = new SupabaseStorage();
+        $path = $storage->uploadAvatar($file, $user['id']);
+        $previousPath = is_string($user['avatar_path'] ?? null) ? $user['avatar_path'] : null;
+
+        $this->connection->beginTransaction();
+        try {
+            $this->repository->updateAvatarPath($user['id'], $path);
+            $this->activityRepository->create($user['id'], 86, 'upload_avatar', 'Updated profile avatar.', $user['role'], $user['email']);
+            $this->connection->commit();
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            try {
+                $storage->delete($path);
+            } catch (Throwable) {
+            }
+            throw $exception;
+        }
+
+        if ($previousPath !== null && $previousPath !== $path) {
+            try {
+                $storage->delete($previousPath);
+            } catch (Throwable) {
+            }
+        }
+
+        return ['avatar_path' => $path, 'avatar_url' => $storage->publicUrl($path)];
+    }
+
+    public function deleteAvatar(array $user): array
+    {
+        $this->profile($user);
+        $path = is_string($user['avatar_path'] ?? null) ? $user['avatar_path'] : null;
+        if ($path === null) {
+            return ['avatar_path' => null, 'avatar_url' => null];
+        }
+
+        $this->connection->beginTransaction();
+        try {
+            $this->repository->updateAvatarPath($user['id'], null);
+            $this->activityRepository->create($user['id'], 86, 'delete_avatar', 'Removed profile avatar.', $user['role'], $user['email']);
+            $this->connection->commit();
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $exception;
+        }
+
+        try {
+            (new SupabaseStorage())->delete($path);
+        } catch (Throwable) {
+        }
+
+        return ['avatar_path' => null, 'avatar_url' => null];
+    }
+
     private function requiredStudent(string $id): array
     {
         $student = $this->repository->student($id);
@@ -146,6 +209,13 @@ final class UserService
         }
 
         return $student;
+    }
+
+    private function withAvatarUrl(array $profile): array
+    {
+        $profile['avatar_url'] = (new SupabaseStorage())->publicUrl(is_string($profile['avatar_path'] ?? null) ? $profile['avatar_path'] : null);
+
+        return $profile;
     }
 
     private function requiredLecturer(string $id): array

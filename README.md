@@ -11,6 +11,12 @@ docker compose up --build
 
 API tersedia pada `http://localhost:8000/api`.
 
+Endpoint `GET /api/health` dapat digunakan untuk memastikan API dan koneksi database aktif.
+
+## Deployment VPS
+
+Konfigurasi produksi memakai Nginx, PHP-FPM, dan PostgreSQL melalui Docker Compose tanpa mengekspos PostgreSQL atau PHP-FPM ke internet. Lihat [panduan deployment VPS](docs/deployment-vps.md).
+
 ## Akun Development
 
 | Role | Email | Password |
@@ -32,6 +38,15 @@ API tersedia pada `http://localhost:8000/api`.
 `POST /api/auth/forgot-password` menerima `email` dan mengirim tautan reset melalui Resend. `POST /api/auth/reset-password` menerima `token` dan `password` baru. Salin `.env.example` menjadi `.env`, lalu isi `RESEND_API_KEY`, `RESEND_FROM`, dan `APP_FRONTEND_URL`. Alamat pengirim harus memakai domain yang sudah diverifikasi di Resend.
 
 Untuk database Docker yang sudah dibuat sebelum fitur ini, jalankan `docker compose exec -T database psql -U nilaiku -d nilaiku < database/migrations/001_password_reset_tokens.sql`.
+
+## Avatar Supabase Storage
+
+| Method | Endpoint | Role |
+| --- | --- | --- |
+| POST | /api/profile/avatar | Student, Lecturer |
+| DELETE | /api/profile/avatar | Student, Lecturer |
+
+Unggah avatar menggunakan `multipart/form-data` dengan field `avatar`. Berkas yang diterima adalah JPEG, PNG, atau WebP dengan ukuran maksimal 1 MB. Buat bucket public `avatars` pada Supabase Storage, lalu isi `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, dan `SUPABASE_STORAGE_BUCKET` dalam `.env`. Jangan gunakan service role key di frontend.
 
 ## Endpoint Master Akademik
 

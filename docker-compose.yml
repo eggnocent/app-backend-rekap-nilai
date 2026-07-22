@@ -18,6 +18,9 @@ services:
       RESEND_FROM: ${RESEND_FROM:-}
       APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:5173}
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      SUPABASE_STORAGE_BUCKET: ${SUPABASE_STORAGE_BUCKET:-avatars}
     depends_on:
       database:
         condition: service_healthy

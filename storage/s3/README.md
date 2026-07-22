@@ -1,7 +1,7 @@
-# S3 Storage
+# Supabase Storage
 
-Folder ini disiapkan untuk integrasi upload ke Amazon S3 atau layanan yang kompatibel dengan S3.
+Avatar disimpan pada bucket publik `avatars` melalui REST API Supabase Storage dari backend PHP.
 
-File unggahan tidak disimpan di server aplikasi. Nantinya modul ini berisi kode untuk membuat object key, mengunggah file, mengambil URL, dan menghapus object dari bucket.
+Isi `.env` dengan `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, dan `SUPABASE_STORAGE_BUCKET`. Service role key hanya digunakan backend.
 
-Konfigurasi bucket, region, endpoint, access key, dan secret key harus disimpan sebagai environment variable, bukan di dalam source code.
+Di Dashboard Supabase, buat bucket `avatars` sebagai public bucket dan atur batas ukuran file 1 MB dengan tipe MIME `image/jpeg`, `image/png`, dan `image/webp`.

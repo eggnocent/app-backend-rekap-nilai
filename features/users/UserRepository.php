@@ -220,6 +220,16 @@ final class UserRepository
         $statement->execute(['id' => $userId, 'name' => $name, 'phone' => $phone, 'updated_by' => $userId]);
     }
 
+    public function updateAvatarPath(string $userId, ?string $path): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE users
+             SET avatar_path = :avatar_path, updated_at = NOW(), updated_by = :updated_by
+             WHERE id = :id'
+        );
+        $statement->execute(['id' => $userId, 'avatar_path' => $path, 'updated_by' => $userId]);
+    }
+
     private function profileIdentifierExists(string $table, string $column, string $value, ?string $exceptProfileId): bool
     {
         $query = 'SELECT 1 FROM ' . $table . ' WHERE LOWER(' . $column . ') = LOWER(:value)';

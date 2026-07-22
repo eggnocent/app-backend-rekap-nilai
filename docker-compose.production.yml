@@ -1,0 +1,80 @@
+services:
+  app:
+    build:
+      context: .
+    restart: unless-stopped
+    command: ["php-fpm"]
+    environment:
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM: ${RESEND_FROM}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_STORAGE_BUCKET: ${SUPABASE_STORAGE_BUCKET:-avatars}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - edge
+      - backend
+
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data.sql:/docker-entrypoint-initdb.d/data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DEPLOYMENT_DOMAIN: ${DEPLOYMENT_DOMAIN}
+    volumes:
+      - ${NGINX_TEMPLATE_DIR:-./nginx/templates/production}:/etc/nginx/templates:ro
+      - certbot_webroot:/var/www/certbot:ro
+      - certbot_conf:/etc/letsencrypt:ro
+    depends_on:
+      - app
+    networks:
+      - edge
+
+  certbot:
+    image: certbot/certbot:v2.11.0
+    profiles: ["certbot"]
+    environment:
+      DEPLOYMENT_DOMAIN: ${DEPLOYMENT_DOMAIN}
+      CERTBOT_EMAIL: ${CERTBOT_EMAIL}
+    volumes:
+      - certbot_webroot:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+
+volumes:
+  postgres_data:
+  certbot_webroot:
+  certbot_conf:
+
+networks:
+  edge:
+  backend:
+    internal: true

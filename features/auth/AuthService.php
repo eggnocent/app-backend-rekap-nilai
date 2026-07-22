@@ -125,6 +125,7 @@ final class AuthService
             'identifier' => $user['identifier'],
             'phone' => $user['phone'],
             'avatar_path' => $user['avatar_path'],
+            'avatar_url' => (new SupabaseStorage())->publicUrl(is_string($user['avatar_path']) ? $user['avatar_path'] : null),
             'student_profile_id' => $user['student_profile_id'],
             'nim' => $user['nim'],
             'lecturer_profile_id' => $user['lecturer_profile_id'],
