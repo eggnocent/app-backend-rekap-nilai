@@ -33,6 +33,16 @@ final class Request
         return $payload;
     }
 
+    public static function file(string $key): array
+    {
+        $file = $_FILES[$key] ?? null;
+        if (!is_array($file)) {
+            Response::error('File ' . $key . ' wajib diunggah.', 422);
+        }
+
+        return $file;
+    }
+
     public static function query(string $key): ?string
     {
         $query = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_QUERY);
