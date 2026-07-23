@@ -63,4 +63,11 @@ final class GradeController
             'data' => $this->service->mine($user),
         ]);
     }
+
+    public function transcript(array $user): never
+    {
+        Response::send([
+            'data' => $this->service->transcript($user),
+        ]);
+    }
 }

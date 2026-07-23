@@ -32,7 +32,7 @@ final class ClassService
             Response::error('Kelas tidak ditemukan.', 404);
         }
 
-        $this->authorizeLecturer($class, $user);
+        $this->authorizeAccess($class, $user);
 
         return $class;
     }
@@ -233,6 +233,21 @@ final class ClassService
         if ($user['role'] === 'lecturer' && $class['lecturer_id'] !== $user['lecturer_profile_id']) {
             Response::error('Anda tidak memiliki akses untuk kelas ini.', 403);
         }
+    }
+
+    private function authorizeAccess(array $class, array $user): void
+    {
+        if ($user['role'] === 'student') {
+            $studentId = $user['student_profile_id'] ?? null;
+
+            if (!is_string($studentId) || $studentId === '' || !$this->repository->studentHasActiveEnrollment($studentId, $class['id'])) {
+                Response::error('Anda tidak memiliki akses untuk kelas ini.', 403);
+            }
+
+            return;
+        }
+
+        $this->authorizeLecturer($class, $user);
     }
 
     private function string(array $payload, string $key): string

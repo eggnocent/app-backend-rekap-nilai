@@ -123,6 +123,16 @@ final class GradeRepository
         return $this->normalizeAll($statement->fetchAll());
     }
 
+    public function transcript(string $studentId): array
+    {
+        $statement = $this->connection->prepare(
+            $this->selectQuery() . " WHERE e.student_id = :student_id AND g.status = 'published' ORDER BY term.start_date DESC NULLS LAST, course.code, c.code"
+        );
+        $statement->execute(['student_id' => $studentId]);
+
+        return $this->normalizeAll($statement->fetchAll());
+    }
+
     public function create(string $enrollmentId, array $scores, string $userId): string
     {
         $statement = $this->connection->prepare(

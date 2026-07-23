@@ -157,6 +157,17 @@ final class GradeService
         }, $this->repository->mine($studentId, $term['id']));
     }
 
+    public function transcript(array $user): array
+    {
+        $studentId = $user['student_profile_id'] ?? null;
+
+        if (!is_string($studentId) || $studentId === '') {
+            Response::error('Profil mahasiswa tidak ditemukan.', 403);
+        }
+
+        return $this->repository->transcript($studentId);
+    }
+
     private function transition(array $grade, string $status, ?string $note, array $user, int $activityType, string $activity, string $message): array
     {
         $this->connection->beginTransaction();

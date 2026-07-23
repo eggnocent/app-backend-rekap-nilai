@@ -47,6 +47,16 @@ final class ClassRepository
         return is_array($class) ? $this->normalize($class) : null;
     }
 
+    public function studentHasActiveEnrollment(string $studentId, string $classId): bool
+    {
+        $statement = $this->connection->prepare(
+            "SELECT 1 FROM enrollments WHERE student_id = :student_id AND class_id = :class_id AND status = 'Terdaftar'"
+        );
+        $statement->execute(['student_id' => $studentId, 'class_id' => $classId]);
+
+        return $statement->fetchColumn() !== false;
+    }
+
     public function termExists(string $termId): bool
     {
         return $this->exists('SELECT 1 FROM academic_terms WHERE id = :id', $termId);

@@ -235,7 +235,7 @@ try {
     }
 
     if ($method === 'GET' && preg_match('#^/api/classes/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
-        $classController->show($matches[1], $authMiddleware->authenticate(['admin', 'lecturer']));
+        $classController->show($matches[1], $authMiddleware->authenticate(['admin', 'lecturer', 'student']));
     }
 
     if ($method === 'PATCH' && preg_match('#^/api/classes/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
@@ -274,6 +274,10 @@ try {
 
     if ($method === 'GET' && $path === '/api/grades/me') {
         $gradeController->mine($authMiddleware->authenticate(['student']));
+    }
+
+    if ($method === 'GET' && $path === '/api/grades/transcript') {
+        $gradeController->transcript($authMiddleware->authenticate(['student']));
     }
 
     if ($method === 'POST' && preg_match('#^/api/grades/([0-9a-fA-F-]{36})/submit$#', $path, $matches) === 1) {
