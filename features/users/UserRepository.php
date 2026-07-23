@@ -196,6 +196,22 @@ final class UserRepository
         $statement->execute($profile + ['id' => $id, 'updated_by' => $actorId]);
     }
 
+    public function deactivateStudent(string $id, string $actorId): void
+    {
+        $student = $this->student($id);
+        if ($student === null) {
+            return;
+        }
+        $statement = $this->connection->prepare(
+            "UPDATE student_profiles SET status = 'inactive', updated_at = NOW(), updated_by = :updated_by WHERE id = :id"
+        );
+        $statement->execute(['id' => $id, 'updated_by' => $actorId]);
+        $statement = $this->connection->prepare(
+            'UPDATE users SET is_active = FALSE, updated_at = NOW(), updated_by = :updated_by WHERE id = :id'
+        );
+        $statement->execute(['id' => $student['user_id'], 'updated_by' => $actorId]);
+    }
+
     public function updateLecturer(string $id, array $profile, string $actorId): void
     {
         $statement = $this->connection->prepare(

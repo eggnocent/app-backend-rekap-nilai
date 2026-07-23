@@ -23,6 +23,11 @@ final class UserController
         Response::send(['data' => $this->service->updateStudent($id, Request::json(), $user)]);
     }
 
+    public function deactivateStudent(string $id, array $user): never
+    {
+        Response::send(['data' => $this->service->deactivateStudent($id, $user)]);
+    }
+
     public function lecturers(): never
     {
         Response::send(['data' => $this->service->lecturers()]);

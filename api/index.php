@@ -9,6 +9,8 @@ require_once dirname(__DIR__) . '/helpers/Token.php';
 require_once dirname(__DIR__) . '/helpers/ResendMailer.php';
 require_once dirname(__DIR__) . '/helpers/SupabaseStorage.php';
 require_once dirname(__DIR__) . '/features/activities/ActivityRepository.php';
+require_once dirname(__DIR__) . '/features/activities/ActivityService.php';
+require_once dirname(__DIR__) . '/features/activities/ActivityController.php';
 require_once dirname(__DIR__) . '/features/auth/AuthRepository.php';
 require_once dirname(__DIR__) . '/features/auth/AuthService.php';
 require_once dirname(__DIR__) . '/features/auth/AuthController.php';
@@ -54,6 +56,7 @@ if (Request::method() === 'OPTIONS') {
 try {
     $connection = database();
     $activityRepository = new ActivityRepository($connection);
+    $activityController = new ActivityController(new ActivityService($activityRepository));
     $authRepository = new AuthRepository($connection);
     $authService = new AuthService($connection, $authRepository, $activityRepository);
     $authController = new AuthController($authService);
@@ -111,6 +114,11 @@ try {
         $dashboardController->show($authMiddleware->authenticate(['admin', 'lecturer', 'student']));
     }
 
+    if ($method === 'GET' && $path === '/api/activities') {
+        $authMiddleware->authenticate(['admin']);
+        $activityController->index();
+    }
+
     if ($method === 'GET' && $path === '/api/profile') {
         $userController->profile($authMiddleware->authenticate(['student', 'lecturer']));
     }
@@ -138,6 +146,10 @@ try {
 
     if ($method === 'PATCH' && preg_match('#^/api/students/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
         $userController->updateStudent($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'DELETE' && preg_match('#^/api/students/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $userController->deactivateStudent($matches[1], $authMiddleware->authenticate(['admin']));
     }
 
     if ($method === 'GET' && $path === '/api/lecturers') {
@@ -192,6 +204,10 @@ try {
 
     if ($method === 'PATCH' && preg_match('#^/api/courses/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
         $courseController->update($matches[1], $authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'DELETE' && preg_match('#^/api/courses/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $courseController->archive($matches[1], $authMiddleware->authenticate(['admin']));
     }
 
     if ($method === 'GET' && $path === '/api/schedules') {

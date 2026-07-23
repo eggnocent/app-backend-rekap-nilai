@@ -127,4 +127,13 @@ final class CourseRepository
 
         return $statement->fetch();
     }
+
+    public function archive(string $id, string $userId): array
+    {
+        $statement = $this->connection->prepare(
+            "UPDATE courses SET status = 'Arsip', updated_at = NOW(), updated_by = :updated_by WHERE id = :id RETURNING id, code, name, credits, recommended_semester, lecturer_id, status"
+        );
+        $statement->execute(['id' => $id, 'updated_by' => $userId]);
+        return $statement->fetch();
+    }
 }

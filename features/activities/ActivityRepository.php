@@ -24,4 +24,22 @@ final class ActivityRepository
             'email' => $email,
         ]);
     }
+
+    public function all(?int $limit = null): array
+    {
+        $query = 'SELECT id, user_id, activity_type, activity, activity_string, role, email, created_at FROM activity_log ORDER BY created_at DESC';
+        if ($limit !== null) {
+            $query .= ' LIMIT :limit';
+        }
+        $statement = $this->connection->prepare($query);
+        if ($limit !== null) {
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        }
+        $statement->execute();
+
+        return array_map(function (array $activity): array {
+            $activity['activity_type'] = (int) $activity['activity_type'];
+            return $activity;
+        }, $statement->fetchAll());
+    }
 }

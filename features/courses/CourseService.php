@@ -53,6 +53,21 @@ final class CourseService
         return $updated;
     }
 
+    public function archive(string $id, array $user): array
+    {
+        $course = $this->repository->find($id);
+        if ($course === null) {
+            Response::error('Mata kuliah tidak ditemukan.', 404);
+        }
+        if ($course['status'] === 'Arsip') {
+            Response::error('Mata kuliah sudah diarsipkan.', 422);
+        }
+
+        $archived = $this->repository->archive($id, $user['id']);
+        $this->activityRepository->create($user['id'], 22, 'archive_course', 'Archived course ' . $archived['code'] . '.', $user['role'], $user['email']);
+        return $archived;
+    }
+
     private function validatedCourse(array $payload): array
     {
         $code = strtoupper($this->string($payload, 'code'));

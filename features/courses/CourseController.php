@@ -28,4 +28,9 @@ final class CourseController
             'data' => $this->service->update($id, Request::json(), $user),
         ]);
     }
+
+    public function archive(string $id, array $user): never
+    {
+        Response::send(['data' => $this->service->archive($id, $user)]);
+    }
 }

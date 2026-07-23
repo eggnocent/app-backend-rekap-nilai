@@ -73,6 +73,28 @@ final class UserService
         }
     }
 
+    public function deactivateStudent(string $id, array $user): array
+    {
+        $student = $this->requiredStudent($id);
+        if ($student['status'] === 'inactive') {
+            Response::error('Mahasiswa sudah nonaktif.', 422);
+        }
+
+        $this->connection->beginTransaction();
+        try {
+            $this->repository->deactivateStudent($id, $user['id']);
+            $updated = $this->requiredStudent($id);
+            $this->activityRepository->create($user['id'], 82, 'deactivate_student', 'Deactivated student ' . $updated['nim'] . '.', $user['role'], $user['email']);
+            $this->connection->commit();
+            return $updated;
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $exception;
+        }
+    }
+
     public function createLecturer(array $payload, array $user): array
     {
         $account = $this->account($payload, true);

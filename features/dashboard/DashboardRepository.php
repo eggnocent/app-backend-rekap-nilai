@@ -26,6 +26,7 @@ final class DashboardRepository
         return [
             'metrics' => $this->adminMetrics($termId),
             'grade_distribution' => $this->gradeDistribution($termId),
+            'performance' => $this->performance($termId),
             'classes' => $this->classes($termId),
             'activities' => $this->activities(),
             'upcoming_events' => $this->upcomingEvents($termId),
@@ -84,6 +85,26 @@ final class DashboardRepository
         $statement->execute(['term_id' => $termId]);
 
         return array_map(fn (array $row): array => ['letter_grade' => $row['letter_grade'], 'total' => (int) $row['total']], $statement->fetchAll());
+    }
+
+    private function performance(string $termId): array
+    {
+        $statement = $this->connection->prepare(
+            "SELECT to_char(date_trunc('month', COALESCE(g.updated_at, g.created_at)), 'YYYY-MM') AS month, AVG(g.final_score) AS average_score
+             FROM grades g
+             INNER JOIN enrollments e ON e.id = g.enrollment_id
+             INNER JOIN classes c ON c.id = e.class_id
+             WHERE c.term_id = :term_id
+               AND g.final_score IS NOT NULL
+             GROUP BY date_trunc('month', COALESCE(g.updated_at, g.created_at))
+             ORDER BY date_trunc('month', COALESCE(g.updated_at, g.created_at)) ASC"
+        );
+        $statement->execute(['term_id' => $termId]);
+
+        return array_map(fn (array $row): array => [
+            'month' => $row['month'],
+            'average_score' => round((float) $row['average_score'], 2),
+        ], $statement->fetchAll());
     }
 
     private function classes(string $termId, ?string $lecturerId = null): array
