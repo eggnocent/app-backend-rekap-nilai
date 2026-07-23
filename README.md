@@ -96,6 +96,7 @@ Simpan nilai draf menerima `assignment_score`, `midterm_score`, dan `final_exam_
 | Method | Endpoint | Role |
 | --- | --- | --- |
 | GET | /api/classes/{id}/attendance | Admin, Lecturer |
+| GET | /api/attendance-meetings/{id} | Admin, Lecturer |
 | POST | /api/classes/{id}/attendance-meetings | Lecturer |
 | PUT | /api/attendance-meetings/{id}/records/{enrollmentId} | Lecturer |
 | GET | /api/attendance | Admin |

@@ -59,7 +59,13 @@ final class GradeRepository
                 g.final_exam_score,
                 g.final_score,
                 g.letter_grade,
-                g.status AS grade_status
+                g.status AS grade_status,
+                (SELECT history.note
+                 FROM grade_status_history history
+                 WHERE history.grade_id = g.id
+                   AND history.to_status = 'returned'
+                 ORDER BY history.created_at DESC
+                 LIMIT 1) AS return_note
              FROM enrollments e
              INNER JOIN student_profiles student ON student.id = e.student_id
              INNER JOIN users student_user ON student_user.id = student.user_id

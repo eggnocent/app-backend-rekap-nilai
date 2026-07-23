@@ -305,6 +305,10 @@ try {
         $attendanceController->classAttendance($matches[1], $authMiddleware->authenticate(['admin', 'lecturer']));
     }
 
+    if ($method === 'GET' && preg_match('#^/api/attendance-meetings/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $attendanceController->meeting($matches[1], $authMiddleware->authenticate(['admin', 'lecturer']));
+    }
+
     if ($method === 'POST' && preg_match('#^/api/classes/([0-9a-fA-F-]{36})/attendance-meetings$#', $path, $matches) === 1) {
         $attendanceController->createMeeting($matches[1], $authMiddleware->authenticate(['lecturer']));
     }

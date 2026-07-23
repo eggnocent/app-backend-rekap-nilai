@@ -55,6 +55,17 @@ final class AttendanceService
         }
     }
 
+    public function meeting(string $meetingId, array $user): array
+    {
+        $meeting = $this->requiredMeeting($meetingId);
+        $this->authorizeClass($meeting, $user, true);
+
+        return [
+            'meeting' => $meeting,
+            'roster' => $this->repository->roster($meetingId),
+        ];
+    }
+
     public function setRecord(string $meetingId, string $enrollmentId, array $payload, array $user): array
     {
         $meeting = $this->requiredMeeting($meetingId);

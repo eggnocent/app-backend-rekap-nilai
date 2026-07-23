@@ -18,6 +18,11 @@ final class AttendanceController
         Response::send(['data' => $this->service->createMeeting($classId, Request::json(), $user)], 201);
     }
 
+    public function meeting(string $id, array $user): never
+    {
+        Response::send(['data' => $this->service->meeting($id, $user)]);
+    }
+
     public function setRecord(string $meetingId, string $enrollmentId, array $user): never
     {
         Response::send(['data' => $this->service->setRecord($meetingId, $enrollmentId, Request::json(), $user)]);
