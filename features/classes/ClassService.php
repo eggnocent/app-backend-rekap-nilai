@@ -21,7 +21,7 @@ final class ClassService
             Response::error('Filter status tidak valid.', 422);
         }
 
-        return $this->repository->all($termId, $courseId, $status, $user['role'] === 'lecturer' ? $user['lecturer_profile_id'] : null);
+        return $this->repository->all($termId, $courseId, $status, $user['role'] === 'lecturer' ? $user['lecturer_profile_id'] : null, Pagination::fromRequest());
     }
 
     public function find(string $id, array $user): array
@@ -112,7 +112,7 @@ final class ClassService
 
     public function schedules(array $user): array
     {
-        return $this->repository->all(Request::query('term_id'), Request::query('class_id'), null, $user['role'] === 'lecturer' ? $user['lecturer_profile_id'] : null);
+        return $this->repository->all(Request::query('term_id'), Request::query('class_id'), null, $user['role'] === 'lecturer' ? $user['lecturer_profile_id'] : null, Pagination::none())['data'];
     }
 
     public function replaceSchedules(string $id, array $payload, array $user): array

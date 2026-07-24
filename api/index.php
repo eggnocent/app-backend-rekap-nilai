@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/koneksi.php';
 require_once dirname(__DIR__) . '/helpers/Response.php';
 require_once dirname(__DIR__) . '/helpers/Request.php';
+require_once dirname(__DIR__) . '/helpers/Pagination.php';
 require_once dirname(__DIR__) . '/helpers/Token.php';
 require_once dirname(__DIR__) . '/helpers/ResendMailer.php';
 require_once dirname(__DIR__) . '/helpers/SupabaseStorage.php';

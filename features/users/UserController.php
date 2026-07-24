@@ -10,7 +10,7 @@ final class UserController
 
     public function students(): never
     {
-        Response::send(['data' => $this->service->students()]);
+        Response::send($this->service->students());
     }
 
     public function createStudent(array $user): never
@@ -30,7 +30,7 @@ final class UserController
 
     public function lecturers(): never
     {
-        Response::send(['data' => $this->service->lecturers()]);
+        Response::send($this->service->lecturers());
     }
 
     public function createLecturer(array $user): never

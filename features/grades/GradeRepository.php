@@ -85,7 +85,7 @@ final class GradeRepository
         }, $statement->fetchAll());
     }
 
-    public function all(?string $status, ?string $classId, ?string $termId): array
+    public function all(?string $status, ?string $classId, ?string $termId, Pagination $pagination): array
     {
         $conditions = [];
         $parameters = [];
@@ -103,11 +103,13 @@ final class GradeRepository
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $query .= ' ORDER BY term.start_date DESC NULLS LAST, course.code, student.nim';
-        $statement = $this->connection->prepare($query);
+        $total = Pagination::total($this->connection, $query, $parameters);
+        $statement = $this->connection->prepare(
+            $pagination->apply($query . ' ORDER BY term.start_date DESC NULLS LAST, course.code, student.nim')
+        );
         $statement->execute($parameters);
 
-        return $this->normalizeAll($statement->fetchAll());
+        return $pagination->envelope($this->normalizeAll($statement->fetchAll()), $total);
     }
 
     public function mine(string $studentId, string $termId): array

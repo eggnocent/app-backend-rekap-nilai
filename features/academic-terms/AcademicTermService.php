@@ -24,7 +24,7 @@ final class AcademicTermService
 
     public function all(): array
     {
-        return $this->repository->all();
+        return $this->repository->all(Pagination::fromRequest());
     }
 
     public function create(array $payload, array $user): array

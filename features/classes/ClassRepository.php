@@ -8,7 +8,7 @@ final class ClassRepository
     {
     }
 
-    public function all(?string $termId, ?string $courseId, ?string $status, ?string $lecturerId): array
+    public function all(?string $termId, ?string $courseId, ?string $status, ?string $lecturerId, Pagination $pagination): array
     {
         $conditions = [];
         $parameters = [];
@@ -26,11 +26,17 @@ final class ClassRepository
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $query .= ' GROUP BY c.id, t.id, course.id, lp.id, lecturer.id ORDER BY t.start_date DESC NULLS LAST, c.code';
-        $statement = $this->connection->prepare($query);
+        // COUNT membungkus query yang SUDAH di-GROUP BY, supaya menghitung
+        // jumlah kelas — bukan jumlah baris hasil join jadwal.
+        $grouped = $query . ' GROUP BY c.id, t.id, course.id, lp.id, lecturer.id';
+        $total = Pagination::total($this->connection, $grouped, $parameters);
+
+        $statement = $this->connection->prepare(
+            $pagination->apply($grouped . ' ORDER BY t.start_date DESC NULLS LAST, c.code')
+        );
         $statement->execute($parameters);
 
-        return $this->normalizeAll($statement->fetchAll());
+        return $pagination->envelope($this->normalizeAll($statement->fetchAll()), $total);
     }
 
     public function find(string $id): ?array

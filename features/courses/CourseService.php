@@ -25,7 +25,7 @@ final class CourseService
             Response::error('Filter semester tidak valid.', 422);
         }
 
-        return $this->repository->all($status, $semester, $search, $includeArchived);
+        return $this->repository->all($status, $semester, $search, $includeArchived, Pagination::fromRequest());
     }
 
     public function create(array $payload, array $user): array

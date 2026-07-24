@@ -10,9 +10,7 @@ final class EnrollmentController
 
     public function index(): never
     {
-        Response::send([
-            'data' => $this->service->all(),
-        ]);
+        Response::send($this->service->all());
     }
 
     public function create(array $user): never

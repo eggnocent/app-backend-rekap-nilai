@@ -31,9 +31,7 @@ final class GradeController
 
     public function index(): never
     {
-        Response::send([
-            'data' => $this->service->all(),
-        ]);
+        Response::send($this->service->all());
     }
 
     public function verify(string $id, array $user): never

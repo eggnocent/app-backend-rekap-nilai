@@ -10,9 +10,7 @@ final class ClassController
 
     public function index(array $user): never
     {
-        Response::send([
-            'data' => $this->service->all($user),
-        ]);
+        Response::send($this->service->all($user));
     }
 
     public function show(string $id, array $user): never

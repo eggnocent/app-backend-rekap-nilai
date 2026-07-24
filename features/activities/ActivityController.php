@@ -10,6 +10,6 @@ final class ActivityController
 
     public function index(): never
     {
-        Response::send(['data' => $this->service->all()]);
+        Response::send($this->service->all());
     }
 }

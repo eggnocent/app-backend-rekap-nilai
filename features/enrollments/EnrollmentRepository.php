@@ -134,7 +134,7 @@ final class EnrollmentRepository
         return is_array($enrollment) ? $this->normalize($enrollment) : null;
     }
 
-    public function all(?string $studentId, ?string $classId, ?string $status): array
+    public function all(?string $studentId, ?string $classId, ?string $status, Pagination $pagination): array
     {
         $conditions = [];
         $parameters = [];
@@ -152,11 +152,15 @@ final class EnrollmentRepository
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $query .= ' ' . $this->groupBy() . ' ORDER BY term.start_date DESC NULLS LAST, course.code, class.code';
-        $statement = $this->connection->prepare($query);
+        $grouped = $query . ' ' . $this->groupBy();
+        $total = Pagination::total($this->connection, $grouped, $parameters);
+
+        $statement = $this->connection->prepare(
+            $pagination->apply($grouped . ' ORDER BY term.start_date DESC NULLS LAST, course.code, class.code')
+        );
         $statement->execute($parameters);
 
-        return $this->normalizeAll($statement->fetchAll());
+        return $pagination->envelope($this->normalizeAll($statement->fetchAll()), $total);
     }
 
     public function allForStudent(string $studentId, string $termId): array

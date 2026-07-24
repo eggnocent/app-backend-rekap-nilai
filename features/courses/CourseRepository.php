@@ -8,7 +8,7 @@ final class CourseRepository
     {
     }
 
-    public function all(?string $status, ?string $semester, ?string $search, bool $includeArchived): array
+    public function all(?string $status, ?string $semester, ?string $search, bool $includeArchived, Pagination $pagination): array
     {
         $conditions = [];
         $parameters = [];
@@ -50,11 +50,11 @@ final class CourseRepository
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $query .= ' ORDER BY c.recommended_semester, c.code';
-        $statement = $this->connection->prepare($query);
+        $total = Pagination::total($this->connection, $query, $parameters);
+        $statement = $this->connection->prepare($pagination->apply($query . ' ORDER BY c.recommended_semester, c.code'));
         $statement->execute($parameters);
 
-        return $statement->fetchAll();
+        return $pagination->envelope($statement->fetchAll(), $total);
     }
 
     public function find(string $id): ?array

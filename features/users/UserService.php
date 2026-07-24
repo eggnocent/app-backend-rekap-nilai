@@ -18,12 +18,21 @@ final class UserService
             Response::error('Filter status mahasiswa tidak valid.', 422);
         }
 
-        return $this->repository->students(Request::query('search'), $status, Request::query('major'));
+        return $this->repository->students(
+            Request::query('search'),
+            $status,
+            Request::query('major'),
+            Pagination::fromRequest(),
+        );
     }
 
     public function lecturers(): array
     {
-        return $this->repository->lecturers(Request::query('search'), Request::query('major'));
+        return $this->repository->lecturers(
+            Request::query('search'),
+            Request::query('major'),
+            Pagination::fromRequest(),
+        );
     }
 
     public function createStudent(array $payload, array $user): array

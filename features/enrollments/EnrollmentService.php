@@ -19,7 +19,7 @@ final class EnrollmentService
             Response::error('Filter status tidak valid.', 422);
         }
 
-        return $this->repository->all(Request::query('student_id'), Request::query('class_id'), $status);
+        return $this->repository->all(Request::query('student_id'), Request::query('class_id'), $status, Pagination::fromRequest());
     }
 
     public function create(array $payload, array $user): array

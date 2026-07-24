@@ -83,7 +83,7 @@ final class GradeService
             Response::error('Filter status tidak valid.', 422);
         }
 
-        return $this->repository->all($status, Request::query('class_id'), Request::query('term_id'));
+        return $this->repository->all($status, Request::query('class_id'), Request::query('term_id'), Pagination::fromRequest());
     }
 
     public function verify(string $id, array $user): array

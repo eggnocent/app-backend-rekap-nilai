@@ -8,7 +8,7 @@ final class UserRepository
     {
     }
 
-    public function students(?string $search, ?string $status, ?string $major): array
+    public function students(?string $search, ?string $status, ?string $major, Pagination $pagination): array
     {
         $conditions = [];
         $parameters = [];
@@ -26,18 +26,19 @@ final class UserRepository
             $parameters['major'] = $major;
         }
 
-        $query = $this->studentSelect();
+        $base = $this->studentSelect();
         if ($conditions !== []) {
-            $query .= ' WHERE ' . implode(' AND ', $conditions);
+            $base .= ' WHERE ' . implode(' AND ', $conditions);
         }
-        $query .= ' ORDER BY sp.nim, u.name';
-        $statement = $this->connection->prepare($query);
+
+        $total = Pagination::total($this->connection, $base, $parameters);
+        $statement = $this->connection->prepare($pagination->apply($base . ' ORDER BY sp.nim, u.name'));
         $statement->execute($parameters);
 
-        return $this->normalizeStudents($statement->fetchAll());
+        return $pagination->envelope($this->normalizeStudents($statement->fetchAll()), $total);
     }
 
-    public function lecturers(?string $search, ?string $major): array
+    public function lecturers(?string $search, ?string $major, Pagination $pagination): array
     {
         $conditions = [];
         $parameters = [];
@@ -51,15 +52,19 @@ final class UserRepository
             $parameters['major'] = $major;
         }
 
-        $query = $this->lecturerSelect();
+        $base = $this->lecturerSelect();
         if ($conditions !== []) {
-            $query .= ' WHERE ' . implode(' AND ', $conditions);
+            $base .= ' WHERE ' . implode(' AND ', $conditions);
         }
-        $query .= ' ORDER BY lp.nidn, u.name';
-        $statement = $this->connection->prepare($query);
+
+        $total = Pagination::total($this->connection, $base, $parameters);
+        $statement = $this->connection->prepare($pagination->apply($base . ' ORDER BY lp.nidn, u.name'));
         $statement->execute($parameters);
 
-        return array_map(fn (array $lecturer): array => $this->normalizeLecturer($lecturer), $statement->fetchAll());
+        return $pagination->envelope(
+            array_map(fn (array $lecturer): array => $this->normalizeLecturer($lecturer), $statement->fetchAll()),
+            $total,
+        );
     }
 
     public function student(string $id): ?array

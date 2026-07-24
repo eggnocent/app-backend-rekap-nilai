@@ -22,15 +22,17 @@ final class AcademicTermRepository
         return is_array($term) ? $term : null;
     }
 
-    public function all(): array
+    public function all(Pagination $pagination): array
     {
+        $base = 'SELECT id, name, academic_year, semester, start_date, end_date, is_active
+                 FROM academic_terms';
+
+        $total = Pagination::total($this->connection, $base, []);
         $statement = $this->connection->query(
-            'SELECT id, name, academic_year, semester, start_date, end_date, is_active
-             FROM academic_terms
-             ORDER BY start_date DESC NULLS LAST, created_at DESC'
+            $pagination->apply($base . ' ORDER BY start_date DESC NULLS LAST, created_at DESC')
         );
 
-        return $statement->fetchAll();
+        return $pagination->envelope($statement->fetchAll(), $total);
     }
 
     public function find(string $id): ?array

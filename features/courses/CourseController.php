@@ -10,9 +10,7 @@ final class CourseController
 
     public function index(array $user): never
     {
-        Response::send([
-            'data' => $this->service->all($user),
-        ]);
+        Response::send($this->service->all($user));
     }
 
     public function create(array $user): never
