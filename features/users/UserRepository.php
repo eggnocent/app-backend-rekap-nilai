@@ -85,6 +85,31 @@ final class UserRepository
         return is_array($lecturer) ? $this->normalizeLecturer($lecturer) : null;
     }
 
+    /**
+     * Rekap kehadiran seorang mahasiswa di seluruh kelasnya.
+     * /api/attendance hanya mengagregasi per pertemuan, sehingga angka per
+     * mahasiswa harus dihitung langsung dari catatan kehadirannya.
+     */
+    public function studentAttendanceSummary(string $studentId): array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT r.status, COUNT(*) AS total
+             FROM attendance_records r
+             INNER JOIN enrollments e ON e.id = r.enrollment_id
+             WHERE e.student_id = :student_id
+             GROUP BY r.status'
+        );
+        $statement->execute(['student_id' => $studentId]);
+
+        $summary = ['Hadir' => 0, 'Terlambat' => 0, 'Izin' => 0, 'Alpha' => 0];
+        foreach ($statement->fetchAll() as $row) {
+            $summary[$row['status']] = (int) $row['total'];
+        }
+        $summary['total'] = array_sum($summary);
+
+        return $summary;
+    }
+
     public function emailExists(string $email, ?string $exceptUserId = null): bool
     {
         $query = 'SELECT 1 FROM users WHERE LOWER(email) = LOWER(:email)';

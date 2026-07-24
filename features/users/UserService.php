@@ -35,6 +35,32 @@ final class UserService
         );
     }
 
+    public function student(string $id): array
+    {
+        $student = $this->repository->student($id);
+
+        if ($student === null) {
+            Response::error('Mahasiswa tidak ditemukan.', 404);
+        }
+
+        // Rekap kehadiran disertakan di sini agar halaman detail cukup
+        // satu permintaan untuk identitas + ringkasannya.
+        $student['attendance'] = $this->repository->studentAttendanceSummary($id);
+
+        return $student;
+    }
+
+    public function lecturer(string $id): array
+    {
+        $lecturer = $this->repository->lecturer($id);
+
+        if ($lecturer === null) {
+            Response::error('Dosen tidak ditemukan.', 404);
+        }
+
+        return $lecturer;
+    }
+
     public function createStudent(array $payload, array $user): array
     {
         $account = $this->account($payload, true);

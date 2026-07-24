@@ -13,6 +13,16 @@ final class UserController
         Response::send($this->service->students());
     }
 
+    public function student(string $id): never
+    {
+        Response::send(['data' => $this->service->student($id)]);
+    }
+
+    public function lecturer(string $id): never
+    {
+        Response::send(['data' => $this->service->lecturer($id)]);
+    }
+
     public function createStudent(array $user): never
     {
         Response::send(['data' => $this->service->createStudent(Request::json(), $user)], 201);

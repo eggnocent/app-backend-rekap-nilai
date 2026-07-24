@@ -21,7 +21,7 @@ final class ClassService
             Response::error('Filter status tidak valid.', 422);
         }
 
-        return $this->repository->all($termId, $courseId, $status, $user['role'] === 'lecturer' ? $user['lecturer_profile_id'] : null, Pagination::fromRequest());
+        return $this->repository->all($termId, $courseId, $status, $user['role'] === 'lecturer' ? $user['lecturer_profile_id'] : Request::query('lecturer_id'), Pagination::fromRequest());
     }
 
     public function find(string $id, array $user): array

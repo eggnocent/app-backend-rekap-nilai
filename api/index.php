@@ -145,6 +145,11 @@ try {
         $userController->createStudent($authMiddleware->authenticate(['admin']));
     }
 
+    if ($method === 'GET' && preg_match('#^/api/students/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $authMiddleware->authenticate(['admin']);
+        $userController->student($matches[1]);
+    }
+
     if ($method === 'PATCH' && preg_match('#^/api/students/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
         $userController->updateStudent($matches[1], $authMiddleware->authenticate(['admin']));
     }
@@ -160,6 +165,11 @@ try {
 
     if ($method === 'POST' && $path === '/api/lecturers') {
         $userController->createLecturer($authMiddleware->authenticate(['admin']));
+    }
+
+    if ($method === 'GET' && preg_match('#^/api/lecturers/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
+        $authMiddleware->authenticate(['admin']);
+        $userController->lecturer($matches[1]);
     }
 
     if ($method === 'PATCH' && preg_match('#^/api/lecturers/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {

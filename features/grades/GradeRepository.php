@@ -85,7 +85,7 @@ final class GradeRepository
         }, $statement->fetchAll());
     }
 
-    public function all(?string $status, ?string $classId, ?string $termId, Pagination $pagination): array
+    public function all(?string $status, ?string $classId, ?string $termId, ?string $studentId, Pagination $pagination): array
     {
         $conditions = [];
         $parameters = [];
@@ -96,6 +96,12 @@ final class GradeRepository
                 $parameters[$key] = $value;
             }
         }
+
+        if ($studentId !== null) {
+            $conditions[] = 'e.student_id = :student_id';
+            $parameters['student_id'] = $studentId;
+        }
+
 
         $query = $this->selectQuery();
 
