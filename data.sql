@@ -148,7 +148,8 @@ CREATE TABLE enrollments (
 CREATE TABLE grades (
     id          UUID        DEFAULT gen_random_uuid()           NOT NULL,
     enrollment_id UUID,
-    assignment_score NUMERIC(5,2),
+    daily_score NUMERIC(5,2),
+    attendance_score NUMERIC(5,2),
     midterm_score NUMERIC(5,2),
     final_exam_score NUMERIC(5,2),
     final_score NUMERIC(5,2),
@@ -209,6 +210,23 @@ CREATE TABLE attendance_records (
     updated_at  TIMESTAMPTZ,
     updated_by  UUID,
     PRIMARY KEY (id),
+    FOREIGN KEY (meeting_id) REFERENCES attendance_meetings (id),
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments (id),
+    FOREIGN KEY (created_by) REFERENCES users (id),
+    FOREIGN KEY (updated_by) REFERENCES users (id)
+);
+
+CREATE TABLE meeting_scores (
+    id            UUID        DEFAULT gen_random_uuid()           NOT NULL,
+    meeting_id    UUID,
+    enrollment_id UUID,
+    score         NUMERIC(5,2),
+    created_at    TIMESTAMPTZ DEFAULT NOW()             NOT NULL,
+    created_by    UUID                                  NOT NULL,
+    updated_at    TIMESTAMPTZ,
+    updated_by    UUID,
+    PRIMARY KEY (id),
+    UNIQUE (meeting_id, enrollment_id),
     FOREIGN KEY (meeting_id) REFERENCES attendance_meetings (id),
     FOREIGN KEY (enrollment_id) REFERENCES enrollments (id),
     FOREIGN KEY (created_by) REFERENCES users (id),
@@ -333,10 +351,10 @@ VALUES
     ('00000000-0000-4000-8000-000000000061', '00000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000041', 'Terdaftar', '2026-07-01 03:00:00+00', '00000000-0000-4000-8000-000000000001'),
     ('00000000-0000-4000-8000-000000000062', '00000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000042', 'Terdaftar', '2026-07-01 03:00:00+00', '00000000-0000-4000-8000-000000000001');
 
-INSERT INTO grades (id, enrollment_id, assignment_score, midterm_score, final_exam_score, final_score, letter_grade, status, submitted_at, verified_at, published_at, created_by, updated_by)
+INSERT INTO grades (id, enrollment_id, daily_score, attendance_score, midterm_score, final_exam_score, final_score, letter_grade, status, submitted_at, verified_at, published_at, created_by, updated_by)
 VALUES
-    ('00000000-0000-4000-8000-000000000071', '00000000-0000-4000-8000-000000000061', 88, 82, 90, 87.00, 'A', 'published', '2026-07-10 03:00:00+00', '2026-07-11 03:00:00+00', '2026-07-12 03:00:00+00', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000001'),
-    ('00000000-0000-4000-8000-000000000072', '00000000-0000-4000-8000-000000000062', 75, 70, 80, 75.50, 'B', 'draft', NULL, NULL, NULL, '00000000-0000-4000-8000-000000000002', NULL);
+    ('00000000-0000-4000-8000-000000000071', '00000000-0000-4000-8000-000000000061', 88, 100, 82, 90, 87.20, 'A', 'published', '2026-07-10 03:00:00+00', '2026-07-11 03:00:00+00', '2026-07-12 03:00:00+00', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000001'),
+    ('00000000-0000-4000-8000-000000000072', '00000000-0000-4000-8000-000000000062', 75, 100, 70, 80, 75.50, 'B', 'draft', NULL, NULL, NULL, '00000000-0000-4000-8000-000000000002', NULL);
 
 INSERT INTO grade_status_history (id, grade_id, from_status, to_status, note, created_at, created_by)
 VALUES

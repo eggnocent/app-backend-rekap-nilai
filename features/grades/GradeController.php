@@ -15,6 +15,20 @@ final class GradeController
         ]);
     }
 
+    public function meetingScores(string $meetingId, array $user): never
+    {
+        Response::send([
+            'data' => $this->service->meetingScoreRoster($meetingId, $user),
+        ]);
+    }
+
+    public function saveMeetingScores(string $meetingId, array $user): never
+    {
+        Response::send([
+            'data' => $this->service->saveMeetingScores($meetingId, Request::json(), $user),
+        ]);
+    }
+
     public function saveDraft(string $enrollmentId, array $user): never
     {
         Response::send([

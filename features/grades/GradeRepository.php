@@ -54,7 +54,13 @@ final class GradeRepository
                 student.nim,
                 student_user.name AS student_name,
                 g.id AS grade_id,
-                g.assignment_score,
+                (SELECT ROUND(AVG(ms.score), 2) FROM meeting_scores ms WHERE ms.enrollment_id = e.id) AS daily_score,
+                (SELECT CASE WHEN COUNT(m.id) = 0 THEN NULL
+                             ELSE ROUND(COUNT(*) FILTER (WHERE r.status = 'Hadir')::numeric / COUNT(m.id) * 100, 2)
+                        END
+                 FROM attendance_meetings m
+                 LEFT JOIN attendance_records r ON r.meeting_id = m.id AND r.enrollment_id = e.id
+                 WHERE m.class_id = e.class_id) AS attendance_score,
                 g.midterm_score,
                 g.final_exam_score,
                 g.final_score,
@@ -77,7 +83,7 @@ final class GradeRepository
         $statement->execute(['class_id' => $classId]);
 
         return array_map(function (array $row): array {
-            foreach (['assignment_score', 'midterm_score', 'final_exam_score', 'final_score'] as $field) {
+            foreach (['daily_score', 'attendance_score', 'midterm_score', 'final_exam_score', 'final_score'] as $field) {
                 $row[$field] = $row[$field] === null ? null : (float) $row[$field];
             }
 
@@ -144,13 +150,14 @@ final class GradeRepository
     public function create(string $enrollmentId, array $scores, string $userId): string
     {
         $statement = $this->connection->prepare(
-            "INSERT INTO grades (enrollment_id, assignment_score, midterm_score, final_exam_score, final_score, letter_grade, status, created_by)
-             VALUES (:enrollment_id, :assignment_score, :midterm_score, :final_exam_score, :final_score, :letter_grade, 'draft', :created_by)
+            "INSERT INTO grades (enrollment_id, daily_score, attendance_score, midterm_score, final_exam_score, final_score, letter_grade, status, created_by)
+             VALUES (:enrollment_id, :daily_score, :attendance_score, :midterm_score, :final_exam_score, :final_score, :letter_grade, 'draft', :created_by)
              RETURNING id"
         );
         $statement->execute([
             'enrollment_id' => $enrollmentId,
-            'assignment_score' => $scores['assignment_score'],
+            'daily_score' => $scores['daily_score'],
+            'attendance_score' => $scores['attendance_score'],
             'midterm_score' => $scores['midterm_score'],
             'final_exam_score' => $scores['final_exam_score'],
             'final_score' => $scores['final_score'],
@@ -165,7 +172,8 @@ final class GradeRepository
     {
         $statement = $this->connection->prepare(
             'UPDATE grades
-             SET assignment_score = :assignment_score,
+             SET daily_score = :daily_score,
+                 attendance_score = :attendance_score,
                  midterm_score = :midterm_score,
                  final_exam_score = :final_exam_score,
                  final_score = :final_score,
@@ -176,7 +184,8 @@ final class GradeRepository
         );
         $statement->execute([
             'id' => $id,
-            'assignment_score' => $scores['assignment_score'],
+            'daily_score' => $scores['daily_score'],
+            'attendance_score' => $scores['attendance_score'],
             'midterm_score' => $scores['midterm_score'],
             'final_exam_score' => $scores['final_exam_score'],
             'final_score' => $scores['final_score'],
@@ -223,13 +232,101 @@ final class GradeRepository
         ]);
     }
 
+    /** Pertemuan + kelas + dosen pengampu, untuk otorisasi input skor. */
+    public function meeting(string $meetingId): ?array
+    {
+        $statement = $this->connection->prepare(
+            'SELECT m.id, m.class_id, m.meeting_date, m.topic, c.lecturer_id, c.code AS class_code, course.name AS course_name
+             FROM attendance_meetings m
+             INNER JOIN classes c ON c.id = m.class_id
+             INNER JOIN courses course ON course.id = c.course_id
+             WHERE m.id = :id
+             LIMIT 1'
+        );
+        $statement->execute(['id' => $meetingId]);
+        $meeting = $statement->fetch();
+
+        return is_array($meeting) ? $meeting : null;
+    }
+
+    /** Mahasiswa satu pertemuan beserta skornya (untuk halaman Nilai Harian). */
+    public function meetingScoreRoster(string $meetingId): array
+    {
+        $statement = $this->connection->prepare(
+            "SELECT e.id AS enrollment_id, student.nim, student_user.name AS student_name, ms.score
+             FROM attendance_meetings m
+             INNER JOIN enrollments e ON e.class_id = m.class_id AND e.status = 'Terdaftar'
+             INNER JOIN student_profiles student ON student.id = e.student_id
+             INNER JOIN users student_user ON student_user.id = student.user_id
+             LEFT JOIN meeting_scores ms ON ms.meeting_id = m.id AND ms.enrollment_id = e.id
+             WHERE m.id = :meeting_id
+             ORDER BY student.nim"
+        );
+        $statement->execute(['meeting_id' => $meetingId]);
+
+        return array_map(function (array $row): array {
+            $row['score'] = $row['score'] === null ? null : (float) $row['score'];
+            return $row;
+        }, $statement->fetchAll());
+    }
+
+    /** Simpan/ubah skor beberapa mahasiswa untuk satu pertemuan (upsert). */
+    public function saveMeetingScores(string $meetingId, array $entries, string $userId): void
+    {
+        $statement = $this->connection->prepare(
+            'INSERT INTO meeting_scores (meeting_id, enrollment_id, score, created_by)
+             VALUES (:meeting_id, :enrollment_id, :score, :created_by)
+             ON CONFLICT (meeting_id, enrollment_id)
+             DO UPDATE SET score = EXCLUDED.score, updated_at = NOW(), updated_by = :updated_by'
+        );
+        foreach ($entries as $entry) {
+            $statement->execute([
+                'meeting_id' => $meetingId,
+                'enrollment_id' => $entry['enrollment_id'],
+                'score' => $entry['score'],
+                'created_by' => $userId,
+                'updated_by' => $userId,
+            ]);
+        }
+    }
+
+    /** Rata-rata skor pertemuan yang sudah dinilai (yang belum dikecualikan). */
+    public function computeDailyScore(string $enrollmentId): ?float
+    {
+        $statement = $this->connection->prepare(
+            'SELECT ROUND(AVG(score), 2) FROM meeting_scores WHERE enrollment_id = :id'
+        );
+        $statement->execute(['id' => $enrollmentId]);
+        $value = $statement->fetchColumn();
+
+        return $value === null || $value === false ? null : (float) $value;
+    }
+
+    /** Skor kehadiran = (jumlah Hadir ÷ jumlah pertemuan kelas) × 100. */
+    public function computeAttendanceScore(string $enrollmentId): ?float
+    {
+        $statement = $this->connection->prepare(
+            "SELECT CASE WHEN COUNT(m.id) = 0 THEN NULL
+                         ELSE ROUND(COUNT(*) FILTER (WHERE r.status = 'Hadir')::numeric / COUNT(m.id) * 100, 2)
+                    END
+             FROM attendance_meetings m
+             LEFT JOIN attendance_records r ON r.meeting_id = m.id AND r.enrollment_id = :id
+             WHERE m.class_id = (SELECT class_id FROM enrollments WHERE id = :id)"
+        );
+        $statement->execute(['id' => $enrollmentId]);
+        $value = $statement->fetchColumn();
+
+        return $value === null || $value === false ? null : (float) $value;
+    }
+
     private function selectQuery(): string
     {
         return <<<'SQL'
 SELECT
     g.id,
     g.enrollment_id,
-    g.assignment_score,
+    g.daily_score,
+    g.attendance_score,
     g.midterm_score,
     g.final_exam_score,
     g.final_score,
@@ -292,8 +389,8 @@ SQL;
 
     private function normalize(array $grade): array
     {
-        foreach (['assignment_score', 'midterm_score', 'final_exam_score', 'final_score'] as $field) {
-            $grade[$field] = (float) $grade[$field];
+        foreach (['daily_score', 'attendance_score', 'midterm_score', 'final_exam_score', 'final_score'] as $field) {
+            $grade[$field] = $grade[$field] === null ? null : (float) $grade[$field];
         }
         $grade['course_credits'] = (int) $grade['course_credits'];
         $history = json_decode($grade['status_history'], true);

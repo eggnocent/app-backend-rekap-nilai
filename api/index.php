@@ -274,6 +274,14 @@ try {
         $gradeController->roster($matches[1], $authMiddleware->authenticate(['lecturer']));
     }
 
+    if ($method === 'GET' && preg_match('#^/api/attendance-meetings/([0-9a-fA-F-]{36})/scores$#', $path, $matches) === 1) {
+        $gradeController->meetingScores($matches[1], $authMiddleware->authenticate(['lecturer']));
+    }
+
+    if ($method === 'PUT' && preg_match('#^/api/attendance-meetings/([0-9a-fA-F-]{36})/scores$#', $path, $matches) === 1) {
+        $gradeController->saveMeetingScores($matches[1], $authMiddleware->authenticate(['lecturer']));
+    }
+
     if ($method === 'PUT' && preg_match('#^/api/grades/enrollments/([0-9a-fA-F-]{36})$#', $path, $matches) === 1) {
         $gradeController->saveDraft($matches[1], $authMiddleware->authenticate(['lecturer']));
     }

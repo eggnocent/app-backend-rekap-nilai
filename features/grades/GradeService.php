@@ -31,7 +31,7 @@ final class GradeService
             Response::error('Enrollment tidak aktif.', 422);
         }
 
-        $scores = $this->validatedScores($payload);
+        $scores = $this->validatedScores($enrollmentId, $payload);
         $existing = $this->repository->findByEnrollment($enrollmentId);
 
         if ($existing !== null && !in_array($existing['status'], ['draft', 'returned'], true)) {
@@ -211,20 +211,89 @@ final class GradeService
         }
     }
 
-    private function validatedScores(array $payload): array
+    private function validatedScores(string $enrollmentId, array $payload): array
     {
-        $assignment = $this->score($payload, 'assignment_score');
+        // Dosen hanya menginput UTS & UAS. Nilai harian (rata-rata skor
+        // pertemuan) dan kehadiran dihitung dari data, bukan diketik.
         $midterm = $this->score($payload, 'midterm_score');
         $finalExam = $this->score($payload, 'final_exam_score');
-        $finalScore = round(($assignment * 0.3) + ($midterm * 0.3) + ($finalExam * 0.4), 2);
+        $daily = $this->repository->computeDailyScore($enrollmentId);
+        $attendance = $this->repository->computeAttendanceScore($enrollmentId);
+
+        // Komponen yang belum ada dihitung 0 pada nilai akhir; nilainya
+        // sendiri disimpan null agar UI bisa membedakan "0" dari "belum ada".
+        $finalScore = round(
+            (($attendance ?? 0.0) * 0.10)
+            + (($daily ?? 0.0) * 0.20)
+            + ($midterm * 0.30)
+            + ($finalExam * 0.40),
+            2
+        );
 
         return [
-            'assignment_score' => $assignment,
+            'daily_score' => $daily,
+            'attendance_score' => $attendance,
             'midterm_score' => $midterm,
             'final_exam_score' => $finalExam,
             'final_score' => $finalScore,
             'letter_grade' => $this->letterGrade($finalScore),
         ];
+    }
+
+    public function meetingScoreRoster(string $meetingId, array $user): array
+    {
+        $meeting = $this->requiredMeeting($meetingId, $user);
+
+        return [
+            'meeting' => [
+                'id' => $meeting['id'],
+                'meeting_date' => $meeting['meeting_date'],
+                'topic' => $meeting['topic'],
+                'class_code' => $meeting['class_code'],
+                'course_name' => $meeting['course_name'],
+            ],
+            'students' => $this->repository->meetingScoreRoster($meetingId),
+        ];
+    }
+
+    public function saveMeetingScores(string $meetingId, array $payload, array $user): array
+    {
+        $this->requiredMeeting($meetingId, $user);
+
+        $rawEntries = $payload['entries'] ?? null;
+        if (!is_array($rawEntries)) {
+            Response::error('Field entries wajib berupa daftar.', 422);
+        }
+
+        $entries = [];
+        foreach ($rawEntries as $entry) {
+            if (!is_array($entry)) {
+                Response::error('Setiap entry harus berupa objek.', 422);
+            }
+            $enrollmentId = $entry['enrollment_id'] ?? null;
+            if (!is_string($enrollmentId) || !preg_match('/^[0-9a-fA-F-]{36}$/', $enrollmentId)) {
+                Response::error('enrollment_id harus UUID yang valid.', 422);
+            }
+            $entries[] = [
+                'enrollment_id' => $enrollmentId,
+                'score' => $this->score($entry, 'score'),
+            ];
+        }
+
+        $this->repository->saveMeetingScores($meetingId, $entries, $user['id']);
+
+        return $this->meetingScoreRoster($meetingId, $user);
+    }
+
+    private function requiredMeeting(string $meetingId, array $user): array
+    {
+        $meeting = $this->repository->meeting($meetingId);
+        if ($meeting === null) {
+            Response::error('Pertemuan tidak ditemukan.', 404);
+        }
+        $this->authorizeLecturer($meeting, $user);
+
+        return $meeting;
     }
 
     private function score(array $payload, string $key): float
