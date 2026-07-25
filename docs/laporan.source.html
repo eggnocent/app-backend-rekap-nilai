@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Laporan — Panduan Penggunaan NilaiKu</title>
+    <style>
+      @page { size: A4; margin: 20mm 18mm; }
+      * { box-sizing: border-box; }
+      body {
+        font-family: "Times New Roman", Georgia, serif;
+        color: #1a1523;
+        font-size: 11.5pt;
+        line-height: 1.6;
+        margin: 0;
+      }
+      h1, h2, h3 { font-family: "Segoe UI", Arial, sans-serif; color: #4a004a; }
+      h1 { font-size: 22pt; margin: 0 0 2pt; }
+      h2 { font-size: 14pt; margin: 20pt 0 6pt; border-bottom: 2px solid #700070; padding-bottom: 3pt; }
+      h3 { font-size: 12pt; margin: 14pt 0 4pt; color: #700070; }
+      .cover {
+        border: 1px solid #e7e1ea; border-left: 6px solid #700070;
+        border-radius: 6px; padding: 16pt 18pt; margin-bottom: 8pt;
+        background: #faf6fa;
+      }
+      .eyebrow { text-transform: uppercase; letter-spacing: 0.05em; color: #700070; font-weight: 700; font-size: 9pt; margin: 0; }
+      .identitas { margin: 10pt 0 0; width: 100%; border-collapse: collapse; font-size: 10.5pt; }
+      .identitas td { padding: 2pt 0; }
+      .identitas td:first-child { color: #6b6470; width: 26%; }
+      table.data { width: 100%; border-collapse: collapse; margin: 6pt 0; font-size: 10.5pt; }
+      table.data th, table.data td { border: 1px solid #d9d2de; padding: 5pt 8pt; text-align: left; vertical-align: top; }
+      table.data th { background: #f5e9f5; color: #4a004a; }
+      code { background: #f2e8f2; color: #700070; padding: 1pt 4pt; border-radius: 3px; font-size: 9.5pt; }
+      pre { background: #241a24; color: #f3e6f3; padding: 8pt 10pt; border-radius: 5px; font-size: 9.5pt; overflow-x: auto; }
+      ol, ul { margin: 4pt 0 8pt; padding-left: 20pt; }
+      li { margin: 2pt 0; }
+      .muted { color: #6b6470; font-size: 10pt; }
+      .pill { display: inline-block; background: #f5e9f5; color: #700070; border-radius: 999px; padding: 1pt 8pt; font-size: 9pt; font-weight: 700; }
+      .pagebreak { page-break-before: always; }
+    </style>
+  </head>
+  <body>
+    <div class="cover">
+      <p class="eyebrow">Laporan Ujian Akhir Semester · Pemrograman Web</p>
+      <h1>Panduan Penggunaan Aplikasi NilaiKu</h1>
+      <p class="muted" style="margin:2pt 0 0;">Sistem rekapitulasi nilai mahasiswa dengan penilaian per pertemuan</p>
+      <table class="identitas">
+        <tr><td>Nama</td><td>Egi Wiratama</td></tr>
+        <tr><td>NIM</td><td>25.01.5305</td></tr>
+        <tr><td>Email</td><td>e.wiratama@students.amikom.ac.id</td></tr>
+        <tr><td>Mata Kuliah</td><td>Pemrograman Web</td></tr>
+      </table>
+    </div>
+
+    <h2>1. Pengantar</h2>
+    <p><strong>NilaiKu</strong> adalah aplikasi berbasis web untuk merekapitulasi nilai mahasiswa. Aplikasi menangani seluruh alur penilaian: dosen menginput komponen nilai, admin memverifikasi dan mempublikasikan, dan mahasiswa melihat transkripnya. Nilai akhir dihitung otomatis dari empat komponen (kehadiran, nilai harian per pertemuan, UTS, dan UAS).</p>
+    <p>Aplikasi memenuhi keempat kriteria soal: (1) aplikasi web rekapitulasi nilai, (2) input data yang valid, (3) role/hak akses berjenjang, dan (4) laporan berupa transkrip serta rekap nilai.</p>
+
+    <h2>2. Teknologi</h2>
+    <table class="data">
+      <tr><th>Lapisan</th><th>Teknologi</th></tr>
+      <tr><td>Antarmuka (frontend)</td><td>React + Vite + TypeScript</td></tr>
+      <tr><td>Layanan (backend)</td><td>PHP murni (REST API), koneksi PDO pada <code>koneksi.php</code></td></tr>
+      <tr><td>Basis data</td><td>PostgreSQL (skema &amp; data awal pada <code>data.sql</code>)</td></tr>
+      <tr><td>Kontainer</td><td>Docker Compose</td></tr>
+    </table>
+
+    <h2>3. Cara Menjalankan</h2>
+    <h3>a. Backend (PHP + PostgreSQL)</h3>
+    <pre>docker compose up --build
+# API tersedia di: http://localhost:8000/api
+# Pemeriksaan: GET http://localhost:8000/api/health</pre>
+    <p class="muted">Skema dan data awal pada <code>data.sql</code> dimuat otomatis saat kontainer database pertama kali dijalankan.</p>
+    <h3>b. Frontend (React)</h3>
+    <pre>npm install
+npm run dev
+# Aplikasi tersedia di: http://localhost:5173</pre>
+
+    <h2>4. Akun &amp; Hak Akses (Role)</h2>
+    <p>Aplikasi memiliki tiga peran dengan menu dan izin berbeda. Kata sandi seluruh akun demo: <code>Password123!</code></p>
+    <table class="data">
+      <tr><th>Peran</th><th>Email</th><th>Hak akses utama</th></tr>
+      <tr><td>Admin</td><td>admin@nilaiku.test</td><td>Kelola data master, verifikasi &amp; publikasi nilai</td></tr>
+      <tr><td>Dosen</td><td>dosen@nilaiku.test</td><td>Input nilai per pertemuan, UTS, UAS; presensi</td></tr>
+      <tr><td>Mahasiswa</td><td>budi.santoso@students.kampus.ac.id</td><td>Melihat nilai &amp; transkrip yang sudah dipublikasi</td></tr>
+    </table>
+
+    <div class="pagebreak"></div>
+    <h2>5. Model Penilaian per Pertemuan</h2>
+    <p>Nilai akhir dihitung dari empat komponen dengan bobot:</p>
+    <table class="data">
+      <tr><th>Komponen</th><th>Bobot</th><th>Sumber</th></tr>
+      <tr><td>Kehadiran</td><td>10%</td><td>Persentase hadir dari total pertemuan (otomatis dari presensi)</td></tr>
+      <tr><td>Nilai Harian</td><td>20%</td><td>Rata-rata skor pertemuan yang sudah dinilai (pertemuan kosong dikecualikan)</td></tr>
+      <tr><td>UTS</td><td>30%</td><td>Diinput dosen</td></tr>
+      <tr><td>UAS</td><td>40%</td><td>Diinput dosen</td></tr>
+    </table>
+    <p class="muted">Nilai akhir = 0,10·Kehadiran + 0,20·Nilai Harian + 0,30·UTS + 0,40·UAS. Contoh: kehadiran 100, harian 85, UTS 80, UAS 90 → 10 + 17 + 24 + 36 = <strong>87</strong>.</p>
+
+    <h2>6. Panduan Penggunaan per Peran</h2>
+
+    <h3>a. Dosen</h3>
+    <ol>
+      <li>Masuk menggunakan akun dosen, lalu buka menu <strong>Kelas Saya</strong> dan pilih kelas.</li>
+      <li>Klik <strong>Kelola presensi</strong> untuk membuat pertemuan dan mencatat kehadiran mahasiswa (Hadir/Terlambat/Izin/Alpha).</li>
+      <li>Klik <strong>Nilai harian</strong>, pilih pertemuan, lalu isi skor tiap mahasiswa. Pertemuan yang dikosongkan tidak dihitung dalam rata-rata harian.</li>
+      <li>Klik <strong>Kelola nilai</strong>. Kolom Kehadiran &amp; Nilai Harian terisi otomatis; dosen cukup mengisi <strong>UTS</strong> dan <strong>UAS</strong>. Nilai akhir &amp; huruf muncul otomatis.</li>
+      <li>Klik <strong>Simpan</strong> (draf), lalu <strong>Kirim</strong> untuk mengajukan nilai ke admin.</li>
+    </ol>
+
+    <h3>b. Admin</h3>
+    <ol>
+      <li>Masuk menggunakan akun admin. Menu <strong>Mahasiswa</strong>, <strong>Dosen</strong>, <strong>Mata Kuliah</strong>, <strong>Kelas</strong> untuk mengelola data master (tambah/ubah, filter, pagination).</li>
+      <li>Buka menu <strong>Nilai</strong> untuk melihat nilai yang dikirim dosen.</li>
+      <li>Untuk nilai berstatus <em>Dikirim</em>: pilih <strong>Verifikasi</strong> atau <strong>Kembalikan</strong> (dengan catatan).</li>
+      <li>Untuk nilai berstatus <em>Terverifikasi</em>: pilih <strong>Publikasikan</strong> agar dapat dilihat mahasiswa.</li>
+    </ol>
+
+    <h3>c. Mahasiswa</h3>
+    <ol>
+      <li>Masuk menggunakan akun mahasiswa.</li>
+      <li>Buka menu <strong>Nilai</strong> untuk melihat rincian per mata kuliah (Kehadiran, Harian, UTS, UAS, nilai akhir, dan huruf).</li>
+      <li>Hanya nilai yang sudah <strong>dipublikasikan</strong> admin yang tampil. IPK/IPS dihitung dari nilai yang terbit.</li>
+    </ol>
+
+    <h2>7. Validasi Data</h2>
+    <ul>
+      <li>Seluruh input skor dibatasi <strong>0–100</strong> dan divalidasi baik di sisi klien maupun server (menolak nilai di luar rentang).</li>
+      <li>Form data master memvalidasi kelengkapan field wajib sebelum menyimpan.</li>
+      <li>Aksi nilai dibatasi sesuai status alur kerja (mis. nilai yang sudah dipublikasi tidak dapat diubah dosen).</li>
+    </ul>
+
+    <h2>8. Alur Status Nilai</h2>
+    <p><span class="pill">Draf</span> → <span class="pill">Dikirim</span> → <span class="pill">Terverifikasi</span> → <span class="pill">Dipublikasi</span>. Jika ada kekeliruan, admin dapat <span class="pill">Mengembalikan</span> nilai ke dosen disertai catatan perbaikan.</p>
+
+    <p class="muted" style="margin-top:24pt;">Kode sumber lengkap tersedia pada repositori GitHub (lihat berkas <code>link-github.txt</code>).</p>
+  </body>
+</html>

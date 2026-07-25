@@ -1,0 +1,7 @@
+Proyek UAS Pemrograman Web - NilaiKu (Aplikasi Rekapitulasi Nilai)
+Nama : Egi Wiratama
+NIM  : 25.01.5305
+
+Repositori kode lengkap:
+- Backend (PHP + PostgreSQL) : https://github.com/eggnocent/app-backend-rekap-nilai
+- Frontend (React + Vite)    : https://github.com/eggnocent/app-frontend-rekap-nilai

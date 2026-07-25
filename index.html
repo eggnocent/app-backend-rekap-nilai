@@ -3,14 +3,75 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NilaiKu API</title>
+    <title>NilaiKu — Aplikasi Rekapitulasi Nilai</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="container">
-      <p class="eyebrow">NilaiKu</p>
-      <h1>Backend API siap disusun</h1>
-      <p id="status">Memeriksa endpoint API…</p>
+    <main class="page">
+      <header class="cover">
+        <p class="eyebrow">Ujian Akhir Semester · Pemrograman Web</p>
+        <h1>NilaiKu</h1>
+        <p class="lead">Aplikasi berbasis web untuk rekapitulasi nilai mahasiswa dengan penilaian per pertemuan (kehadiran, nilai harian, UTS, dan UAS).</p>
+
+        <!-- Isi identitas kamu di sini -->
+        <dl class="identitas">
+          <div><dt>Nama</dt><dd>Egi Wiratama</dd></div>
+          <div><dt>NIM</dt><dd>25.01.5305</dd></div>
+          <div><dt>Email</dt><dd>e.wiratama@students.amikom.ac.id</dd></div>
+        </dl>
+
+        <p class="status" id="status" data-state="checking">Memeriksa koneksi API…</p>
+      </header>
+
+      <section class="card">
+        <h2>Cakupan Soal (SCPMK.07)</h2>
+        <ul class="rubrik">
+          <li><span class="poin">40</span><div><strong>Aplikasi web rekapitulasi nilai</strong><p>Rekap nilai per kelas dengan alur draf → dikirim → diverifikasi → dipublikasi.</p></div></li>
+          <li><span class="poin">30</span><div><strong>Input data yang valid</strong><p>Validasi skor 0–100 di sisi klien dan server, serta validasi form data master.</p></div></li>
+          <li><span class="poin">15</span><div><strong>Role / hak akses</strong><p>Tiga peran: Admin, Dosen, dan Mahasiswa, masing-masing dengan menu dan izin berbeda.</p></div></li>
+          <li><span class="poin">15</span><div><strong>Laporan</strong><p>Transkrip &amp; rekap nilai per mahasiswa; panduan penggunaan pada <em>laporan.pdf</em>.</p></div></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Arsitektur &amp; Berkas Proyek</h2>
+        <p>Proyek dibangun dengan arsitektur <strong>frontend–backend terpisah</strong>. Berkas wajib UAS berada di folder ini:</p>
+        <ul class="files">
+          <li><code>index.html</code> · <code>style.css</code> · <code>script.js</code> — halaman pengantar &amp; pengecek status API ini</li>
+          <li><code>koneksi.php</code> — koneksi PDO ke database (dipakai seluruh endpoint API)</li>
+          <li><code>data.sql</code> — skema &amp; data awal (PostgreSQL)</li>
+          <li><code>laporan.pdf</code> — panduan penggunaan aplikasi</li>
+          <li><code>link-github.txt</code> — tautan repositori kode lengkap</li>
+        </ul>
+        <p class="muted">Antarmuka aplikasi yang sesungguhnya dibangun dengan React (Vite) dan mengonsumsi REST API PHP di folder <code>api/</code>. Kode lengkap ada di repositori GitHub.</p>
+      </section>
+
+      <section class="card">
+        <h2>Cara Menjalankan</h2>
+        <h3>Backend (PHP + PostgreSQL)</h3>
+        <pre><code>docker compose up --build
+# API: http://localhost:8000/api
+# Cek: GET http://localhost:8000/api/health</code></pre>
+        <h3>Frontend (React + Vite)</h3>
+        <pre><code>npm install
+npm run dev
+# Aplikasi: http://localhost:5173</code></pre>
+
+        <h3>Akun Demo <span class="muted">(password: Password123!)</span></h3>
+        <table class="akun">
+          <thead><tr><th>Peran</th><th>Email</th></tr></thead>
+          <tbody>
+            <tr><td>Admin</td><td>admin@nilaiku.test</td></tr>
+            <tr><td>Dosen</td><td>dosen@nilaiku.test</td></tr>
+            <tr><td>Mahasiswa</td><td>budi.santoso@students.kampus.ac.id</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <footer class="foot">
+        <a class="btn" id="github" href="#" target="_blank" rel="noreferrer">Repositori GitHub</a>
+        <p class="muted">Tautan lengkap tersedia pada <code>link-github.txt</code>.</p>
+      </footer>
     </main>
     <script src="script.js"></script>
   </body>
