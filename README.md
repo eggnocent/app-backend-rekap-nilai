@@ -48,6 +48,17 @@ Untuk database Docker yang sudah dibuat sebelum fitur ini, jalankan `docker comp
 
 Unggah avatar menggunakan `multipart/form-data` dengan field `avatar`. Berkas yang diterima adalah JPEG, PNG, atau WebP dengan ukuran maksimal 1 MB. Buat bucket public `avatars` pada Supabase Storage, lalu isi `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, dan `SUPABASE_STORAGE_BUCKET` dalam `.env`. Jangan gunakan service role key di frontend.
 
+## Seeder Visualisasi
+
+Seeder visualisasi menambahkan data demo tanpa menghapus data yang sudah ada. Data mencakup akun dosen dan mahasiswa demo, semester historis, kelas, KRS, nilai, presensi, agenda, serta activity log.
+
+```bash
+cd /opt/nilaiku/app-backend
+./scripts/seed-visualization.sh /opt/nilaiku/.env
+```
+
+Seeder aman dijalankan berulang kali. Akun mahasiswa demo memakai pola `demo.student01@nilaiku.demo` hingga `demo.student24@nilaiku.demo`; akun dosen memakai pola `demo.lecturer01@nilaiku.demo` hingga `demo.lecturer08@nilaiku.demo`. Password seluruh akun demo adalah `Demo12345!`.
+
 ## Endpoint Master Akademik
 
 | Method | Endpoint | Role |
